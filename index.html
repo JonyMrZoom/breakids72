@@ -56,6 +56,9 @@
   .chip.today::after{content:'';position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--good);}
 
   .summary{display:flex;justify-content:space-between;align-items:baseline;margin:14px 2px 10px;font-size:13px;color:var(--muted);}
+  .summary .tag{font-size:11px;font-weight:750;padding:2px 7px;border-radius:999px;margin:0 2px;}
+  .summary .tag.g{background:var(--good-soft);color:var(--good);}
+  .summary .tag.w{background:var(--card-hi);color:var(--faint);}
   .summary b{color:var(--text);font-size:15px;}
   .search{width:100%;padding:11px 12px;border-radius:11px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:16px;outline:none;margin-bottom:12px;box-shadow:var(--shadow);}
   .search:focus{border-color:var(--accent);}
@@ -157,6 +160,10 @@
   .startfoot{margin-top:auto;padding-top:18px;}
   .confirm{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 15px;box-shadow:var(--shadow);font-size:14px;line-height:1.5;}
   .confirm b{font-weight:750;}
+  .confirm .tag{background:var(--good-soft);color:var(--good);font-size:11px;font-weight:750;padding:2px 7px;border-radius:999px;vertical-align:middle;}
+  .startlinks{display:flex;gap:8px;margin-top:6px;}
+  .startlinks button{flex:1;background:transparent;border:none;color:var(--muted);font-size:14px;font-weight:650;padding:12px;border-radius:12px;cursor:pointer;}
+  .startlinks button:active{background:var(--card-hi);}
   .center{flex:1;display:flex;align-items:center;justify-content:center;}
   .spinner{width:26px;height:26px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);animation:spin .7s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
@@ -223,7 +230,14 @@ function load(silent){
   return api('getAppData').then(function(d){
     loading=false; lastLoad=Date.now(); S=d;
     if (bi>=branches().length) bi=0;
-    if (!session && S.configured && screen!=='settings') { openStart(); return; }
+    if (S.configured && screen!=='settings') {
+      if (session && session.day !== today()) session = null;        // наступил новый день — спросим заново
+      if (!session) {
+        var tr = trainsToday();
+        if (tr.length) { openStart(tr[0]); return; }                 // сегодня тренировка — стартовый экран
+        session = { branch: bname(), iso: null, day: today(), skipped: true };   // обычный день — сразу список
+      }
+    }
     render(); refreshSheet();
   }).catch(function(e){ loading=false; spin(false); if(!silent){ render(); } toast(e.message); });
 }
@@ -275,15 +289,17 @@ function strip(b){
 function pickDate(iso){ sel[bname()]=iso; render(); }
 function summary(b){
   var s=curIso(), d=new Date(s+'T12:00:00'), n=b.kids.filter(function(k){ return k.attendance[s]; }).length;
-  return '<div class="summary"><span>'+DOW[d.getDay()].toLowerCase()+', '+d.getDate()+' '+GEN[d.getMonth()]+
-    ' · <a href="#" onclick="openStart();return false;" style="color:var(--accent);text-decoration:none;font-weight:650">сменить</a></span>'+
+  var mark = s===today() ? '<span class="tag g">сегодня</span>' : '<span class="tag w">другой день</span>';
+  return '<div class="summary"><span>'+DOW[d.getDay()].toLowerCase()+', '+d.getDate()+' '+GEN[d.getMonth()]+' '+mark+
+    ' <a href="#" onclick="openStart(bi);return false;" style="color:var(--accent);text-decoration:none;font-weight:650">сменить</a></span>'+
     '<span>пришли <b>'+n+'</b> из '+b.kids.length+'</span></div>';
 }
 function list(b){
   if (!b.kids.length) return '<div class="empty"><h3>Пока нет детей</h3>Нажмите «+», чтобы добавить.</div>';
   var s=curIso(), g=groups(b);
   return g.order.map(function(name){
-    return '<div class="grp"><div class="gh"><span>'+esc(name)+'</span><span>'+g.map[name].length+'</span></div>'+
+    var came = g.map[name].filter(function(k){ return k.attendance[s]; }).length;
+    return '<div class="grp"><div class="gh"><span>'+esc(name)+'</span><span>'+came+' / '+g.map[name].length+'</span></div>'+
       g.map[name].map(function(k){
         var on=!!k.attendance[s];
         return '<div class="card" data-n="'+esc(k.name.toLowerCase())+'"><div class="main" onclick="openKid(\''+k.id+'\')"><div class="nm">'+esc(k.name)+'</div>'+
@@ -299,9 +315,19 @@ function filter(){
 }
 
 // ======== стартовый экран: адрес и дата тренировки ========
-function openStart(){
+/** Индексы филиалов, у которых тренировка сегодня. */
+function trainsToday(){
+  var t=today(), out=[];
+  branches().forEach(function(n,i){
+    var b=S.branches[n];
+    if (b && !b.error && (b.dates||[]).some(function(d){ return d.iso===t; })) out.push(i);
+  });
+  return out;
+}
+function openStart(pref){
   closeSheet();
-  pick.bi = Math.min(bi, Math.max(branches().length-1,0));
+  var tr = trainsToday(), def = (typeof pref==='number') ? pref : (tr.length ? tr[0] : bi);
+  pick.bi = Math.min(Math.max(def,0), Math.max(branches().length-1,0));
   pick.iso = suggestIso(pick.bi);
   screen = 'start'; render();
 }
@@ -334,7 +360,7 @@ function renderStart(){
     return '<div class="dbtn'+(d.iso===pick.iso?' on':'')+'" onclick="pickDay(\''+d.iso+'\')"><div class="dw">'+d.dow+'</div><div class="dd">'+d.label.slice(0,2)+'</div><div class="nt">'+note+'</div></div>';
   }).join('') || '<div class="hint">В таблице нет дат тренировок этого месяца.</div>';
 
-  var ready = !!pick.iso && !b.error;
+  var ready = !!pick.iso && !b.error, isToday = pick.iso===t;
   $('app').innerHTML =
     '<div class="start">'+
       '<img class="logo" src="icon-192.png" alt="">'+
@@ -343,9 +369,10 @@ function renderStart(){
       '<div class="step"><i>1</i>Адрес</div><div class="pickbig">'+list+'</div>'+
       '<div class="step"><i>2</i>Дата тренировки · '+esc(S.monthLabel)+'</div><div class="dates" id="dates">'+dates+'</div>'+
       '<div class="startfoot">'+
-        (ready ? '<div class="confirm">Отмечаем <b>'+esc(humanDate(pick.iso))+'</b><br>'+esc(branches()[pick.bi])+'</div>' : '<div class="confirm">'+(b.error?esc(b.error):'Выберите дату тренировки')+'</div>')+
+        (ready ? '<div class="confirm">Отмечаем <b>'+esc(humanDate(pick.iso))+'</b>'+(isToday?' <span class="tag">сегодня</span>':'')+'<br>'+esc(branches()[pick.bi])+'</div>'
+               : '<div class="confirm">'+(b.error?esc(b.error):'Выберите дату тренировки')+'</div>')+
         '<button class="btn p" onclick="startGo()"'+(ready?'':' disabled')+'>Начать отметку</button>'+
-        '<button class="btn q" onclick="openSettings()">Настройки</button>'+
+        '<div class="startlinks"><button onclick="skipStart()">Пропустить</button><button onclick="openSettings()">Настройки</button></div>'+
       '</div>'+
     '</div>';
   var d = $('dates'), on = d && d.querySelector('.on');
@@ -357,7 +384,14 @@ function startGo(){
   if (!pick.iso) return;
   bi = pick.bi; try{ localStorage.setItem('bk72_branch', bi); }catch(e){}
   sel[bname()] = pick.iso;
-  session = { branch: bname(), iso: pick.iso };
+  session = { branch: bname(), iso: pick.iso, day: today() };
+  screen = 'main'; q=''; render();
+}
+/** «Пропустить» — просто посмотреть список, добавить ребёнка, принять оплату. */
+function skipStart(){
+  bi = pick.bi; try{ localStorage.setItem('bk72_branch', bi); }catch(e){}
+  if (pick.iso) sel[bname()] = pick.iso;
+  session = { branch: bname(), iso: pick.iso, day: today(), skipped: true };
   screen = 'main'; q=''; render();
 }
 
