@@ -105,6 +105,11 @@
   .pick{display:flex;gap:8px;margin-bottom:14px;}
   .pick button{flex:1;padding:12px 8px;border-radius:11px;font-weight:700;font-size:14px;background:#fff;border:1px solid var(--border);color:var(--muted);cursor:pointer;}
   .pick button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+  .tags .tag{padding:10px 14px;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:14px;font-weight:650;cursor:pointer;}
+  .tags .tag.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .tags .tag.new{color:var(--muted);border-style:dashed;}
+  .tags .tag.new.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);border-style:solid;}
   .stats{display:flex;gap:8px;margin-top:10px;}
   .stat{flex:1;background:#f8fafc;border:1px solid var(--border);border-radius:13px;padding:10px 6px;text-align:center;}
   .stat b{display:block;font-size:20px;font-variant-numeric:tabular-nums;}
@@ -178,7 +183,9 @@ var API = null;
 try { API = localStorage.getItem('bk72_apiUrl'); } catch (e) {}
 function api(action, params){
   if (!API) return Promise.reject(new Error('Сервер не подключён — откройте Настройки'));
-  return fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({action:action, params:params||[]}) })
+  var ctl = window.AbortController ? new AbortController() : null;
+  if (ctl) setTimeout(function(){ ctl.abort(); }, 25000);     // чтобы запрос не висел вечно
+  return fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, signal: ctl?ctl.signal:undefined, body:JSON.stringify({action:action, params:params||[]}) })
     .then(function(r){ if (!r.ok) throw new Error('Сервер ответил ' + r.status); return r.json(); })
     .then(function(d){ if (d.ok) return d.result; throw new Error(d.error || 'Ошибка сервера'); });
 }
@@ -241,7 +248,7 @@ function load(silent){
     render(); refreshSheet();
   }).catch(function(e){ loading=false; spin(false); if(!silent){ render(); } toast(e.message); });
 }
-function spin(on){ var b=$('rf'); if(b) b.classList.toggle('spin',!!on); }
+function spin(){}
 setInterval(function(){
   var a=document.activeElement;
   if (API && screen==='main' && !sheetKey && !pending && !loading && document.visibilityState==='visible' && !(a && a.tagName==='INPUT')) load(true);
@@ -256,7 +263,6 @@ function render(){
   var tabs=branches().map(function(n,i){ return '<div class="tab'+(i===bi?' on':'')+'" onclick="setBranch('+i+')">'+esc(n)+'</div>'; }).join('');
   var h='<div class="top"><div class="row"><div class="logo"><img src="icon-192.png" alt=""></div>'+
     '<div class="grow"><div class="title">БРЕЙКИДС72</div><div class="sub">'+(S&&S.configured?esc(S.monthLabel):'не подключено')+'</div></div>'+
-    '<button class="ib'+(loading?' spin':'')+'" id="rf" onclick="load(true)" aria-label="Обновить">'+IC.refresh+'</button>'+
     '<button class="ib" onclick="openSettings()" aria-label="Настройки">'+IC.gear+'</button></div>'+
     (tabs?'<div class="tabs">'+tabs+'</div>':'')+'</div>';
 
@@ -358,7 +364,8 @@ function renderStart(){
   var dates = (b.dates||[]).map(function(d){
     var note = d.iso===t ? 'сегодня' : (d.iso<t ? 'прошло' : '');
     return '<div class="dbtn'+(d.iso===pick.iso?' on':'')+'" onclick="pickDay(\''+d.iso+'\')"><div class="dw">'+d.dow+'</div><div class="dd">'+d.label.slice(0,2)+'</div><div class="nt">'+note+'</div></div>';
-  }).join('') || '<div class="hint">В таблице нет дат тренировок этого месяца.</div>';
+  }).join('') || '<div class="hint">В таблице нет столбцов с датами на '+esc(S.monthLabel)+'.<br>Откройте таблицу → меню «БРЕЙКИДС72» → «Обновить календарь по расписанию».'+
+    '<button class="btn s" style="margin-top:10px" onclick="openDiag()">Проверить таблицу</button></div>';
 
   var ready = !!pick.iso && !b.error, isToday = pick.iso===t;
   $('app').innerHTML =
@@ -492,12 +499,25 @@ function doPay(id){
 }
 
 // ======== добавить / изменить ========
+/** Группы тегами над полем — один тап, без выпадающих списков. */
 function groupField(pre, cur){
-  var g=groups(B()).order;
-  return '<select id="'+pre+'" onchange="$(\''+pre+'n\').hidden=this.value!==\'__new\'">'+g.map(function(x){ return '<option'+(x===cur?' selected':'')+'>'+esc(x)+'</option>'; }).join('')+
-    '<option value="__new"'+(g.length?'':' selected')+'>+ новая группа</option></select><input id="'+pre+'n" placeholder="Название группы" style="margin-top:8px"'+(g.length?' hidden':'')+'>';
+  var g=groups(B()).order, has=g.indexOf(cur)>=0, sel=has?cur:(g.length?g[0]:'__new');
+  var tags=g.map(function(x){
+    return '<button type="button" class="tag'+(x===sel?' on':'')+'" data-g="'+esc(x)+'" onclick="pickGroup(\''+pre+'\',this)">'+esc(x)+'</button>';
+  }).join('')+'<button type="button" class="tag new'+(sel==='__new'?' on':'')+'" data-g="__new" onclick="pickGroup(\''+pre+'\',this)">+ новая</button>';
+  return '<div class="tags" id="'+pre+'t">'+tags+'</div><input id="'+pre+'n" placeholder="Название новой группы"'+(sel==='__new'?'':' hidden')+'>';
 }
-function groupVal(pre){ var v=$(pre).value; return v==='__new'?$(pre+'n').value.trim():v; }
+function pickGroup(pre, el){
+  var w=$(pre+'t');
+  w.querySelectorAll('.tag').forEach(function(b){ b.classList.toggle('on', b===el); });
+  var isNew=el.getAttribute('data-g')==='__new', inp=$(pre+'n');
+  inp.hidden=!isNew; if(isNew) inp.focus();
+}
+function groupVal(pre){
+  var on=$(pre+'t').querySelector('.tag.on'); if(!on) return '';
+  var v=on.getAttribute('data-g');
+  return v==='__new' ? $(pre+'n').value.trim() : v;
+}
 var atype='abon';
 function openAdd(){
   atype='abon';
@@ -524,18 +544,45 @@ function openEdit(id){
     '<div class="field"><label for="eg">Группа</label>'+groupField('eg', k.group)+'</div>'+
     '<div class="field"><label for="e1">Телефон родителя</label><input id="e1" type="tel" value="'+esc(k.phone1)+'"></div>'+
     '<div class="field"><label for="e2">Второй телефон</label><input id="e2" type="tel" value="'+esc(k.phone2)+'"></div>'+
-    '<div class="two"><div class="field"><label for="et">Тип оплаты</label><select id="et"><option'+(k.payType!=='РАЗОВОЕ'?' selected':'')+'>АБОНЕМЕНТ</option><option'+(k.payType==='РАЗОВОЕ'?' selected':'')+'>РАЗОВОЕ</option></select></div>'+
-    '<div class="field"><label for="ep">Цена занятия, ₽</label><input id="ep" type="number" inputmode="numeric" value="'+k.price+'"></div></div>'+
-    '<div class="field"><label for="eb">Баланс (внесено), ₽</label><input id="eb" type="number" inputmode="numeric" value="'+k.balance+'"><div class="hint">Остаток = баланс − занятия × цена.</div></div>'+
+    '<div class="field"><label>Как платит</label><div class="pick" id="et"><button class="'+(k.payType!=='РАЗОВОЕ'?'on':'')+'" data-t="abon" onclick="setE(\'abon\')">Абонемент</button><button class="'+(k.payType==='РАЗОВОЕ'?'on':'')+'" data-t="single" onclick="setE(\'single\')">Разово</button></div></div>'+
+    '<div class="two"><div class="field"><label for="ep">Цена занятия, ₽</label><input id="ep" type="number" inputmode="numeric" value="'+k.price+'"></div>'+
+    '<div class="field"><label for="eb">Баланс, ₽</label><input id="eb" type="number" inputmode="numeric" value="'+k.balance+'"></div></div>'+
+    '<div class="hint" style="margin:-4px 0 12px">Остаток = баланс − занятия × цена.</div>'+
     '<button class="btn p" id="ego" onclick="doEdit(\''+id+'\')">Сохранить</button><button class="btn q" onclick="openKid(\''+id+'\')">Назад</button>', 'edit');
-  $('et').onchange=function(){ $('ep').value=this.value==='РАЗОВОЕ'?S.config.singlePrice:S.config.abonPrice; };
+  etype = k.payType==='РАЗОВОЕ' ? 'single' : 'abon';
+}
+var etype='abon';
+function setE(t){
+  etype=t;
+  document.querySelectorAll('#et button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-t')===t); });
+  $('ep').value = t==='single' ? S.config.singlePrice : S.config.abonPrice;
 }
 function doEdit(id){
-  var f={name:$('en').value.trim(), group:groupVal('eg'), phone1:$('e1').value.trim(), phone2:$('e2').value.trim(), payType:$('et').value, price:$('ep').value, balance:$('eb').value}, branch=bname();
+  var f={name:$('en').value.trim(), group:groupVal('eg'), phone1:$('e1').value.trim(), phone2:$('e2').value.trim(), payType:(etype==='single'?'РАЗОВОЕ':'АБОНЕМЕНТ'), price:$('ep').value, balance:$('eb').value}, branch=bname();
   if(!f.name||!f.group){ toast('Имя и группа обязательны'); return; }
   $('ego').disabled=true; pending++;
   api('updateChild',[branch,id,f]).then(function(b){ S.branches[branch]=b; render(); openKid(id); toast('Сохранено'); })
     .catch(function(e){ toast('Ошибка: '+e.message); var x=$('ego'); if(x) x.disabled=false; }).then(function(){ pending--; });
+}
+
+/** Что скрипт видит в таблице — если данные выглядят странно. */
+function openDiag(){
+  sheet('<h2>Проверка таблицы</h2><div class="sub">Что скрипт нашёл в листах филиалов</div>'+
+    '<div id="dg" style="margin-top:12px" class="hint">Читаю таблицу…</div>'+
+    '<button class="btn q" onclick="closeSheet()">Закрыть</button>', 'diag');
+  api('diagnose').then(function(d){
+    var h='<div class="hint">Месяц: <b>'+esc(d.month)+'</b><br>Вкладки: '+esc(d.sheets.join(', '))+'</div>';
+    d.branches.forEach(function(b){
+      h+='<div class="panel" style="margin-top:10px"><h3>'+esc(b.name)+'</h3>';
+      if (b.error) h+='<p style="color:var(--bad)">'+esc(b.error)+'</p>';
+      else h+='<p>Дни по расписанию: <b>'+esc(b.days||'—')+'</b><br>Строк с детьми: '+b.rows+
+        '<br>Дат в календаре: <b>'+b.dates.length+'</b>'+(b.dates.length?' — '+esc(b.dates.join(', ')):'')+'</p>'+
+        '<p><b>Заголовки строки 2:</b><br>'+esc(b.headers.join(' · '))+'</p>'+
+        '<p><b>Куда пишет скрипт:</b><br>'+esc(b.fields.join(' · '))+'</p>';
+      h+='</div>';
+    });
+    var e=$('dg'); if(e){ e.className=''; e.innerHTML=h; }
+  }).catch(function(e){ var x=$('dg'); if(x) x.textContent='Не удалось прочитать: '+e.message+' (возможно, в таблице старый скрипт)'; });
 }
 
 // ======== настройки ========
@@ -554,6 +601,8 @@ function renderSettings(){
     h+='<div class="panel"><h3>Новый месяц</h3><p>Текущий месяц уйдёт в архивную вкладку «Филиал — '+esc(S.monthLabel)+'», рабочие листы очистятся под новый месяц: дети и телефоны останутся, календарь обновится, отметки обнулятся, остаток станет балансом. Таблица и адрес сервера те же.</p>'+
       '<button class="btn p" id="snm" onclick="newMonth()">Создать таблицу на следующий месяц</button></div>';
     h+='<div class="panel"><h3>История оплат</h3><p>Все оплаты, внесённые через приложение (лист «Платежи»).</p><button class="btn s" onclick="openLog()">Показать</button></div>';
+    h+='<div class="panel"><h3>Проверка таблицы</h3><p>Показывает, какие столбцы и даты скрипт нашёл в листах филиалов. Пригодится, если данные в приложении выглядят не так, как в таблице.</p>'+
+      '<button class="btn s" onclick="openDiag()">Проверить</button><button class="btn q" onclick="load(true);toast(\'Обновляю…\')">Обновить данные</button></div>';
   }
   $('app').innerHTML=h+'</div>';
 }
