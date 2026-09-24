@@ -1,8 +1,8 @@
 // БРЕЙКИДС72 — service worker.
-// Файлы приложения берутся из сети (чтобы обновления с GitHub приходили сразу),
-// а кэш нужен только чтобы приложение открывалось при плохой связи.
-// Данные таблицы (запросы к Google Apps Script) не кэшируются никогда.
-var CACHE = 'breakids72-v3';
+// Приложение открывается мгновенно из кэша (в том числе без интернета),
+// а свежая версия файлов подтягивается в фоне и применяется при следующем запуске.
+// Данные таблицы (запросы к Google Apps Script) не кэшируются никогда — они идут POST на другой домен.
+var CACHE = 'breakids72-v4';
 var SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
@@ -17,15 +17,21 @@ self.addEventListener('activate', function (e) {
   self.clients.claim();
 });
 
+// cache-first + фоновое обновление: экран появляется сразу, файлы обновляются следом
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
   var url = new URL(e.request.url);
   if (url.origin !== self.location.origin) return;
   e.respondWith(
-    fetch(e.request).then(function (res) {
-      var copy = res.clone();
-      caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
-      return res;
-    }).catch(function () { return caches.match(e.request); })
+    caches.match(e.request).then(function (hit) {
+      var net = fetch(e.request).then(function (res) {
+        if (res && res.ok) {
+          var copy = res.clone();
+          caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
+        }
+        return res;
+      }).catch(function () { return hit; });
+      return hit || net;
+    })
   );
 });

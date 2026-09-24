@@ -59,6 +59,7 @@
   .summary .tag{font-size:11px;font-weight:750;padding:2px 7px;border-radius:999px;margin:0 2px;}
   .summary .tag.g{background:var(--good-soft);color:var(--good);}
   .summary .tag.w{background:var(--card-hi);color:var(--faint);}
+  .summary .tag.off{background:var(--bad-soft);color:var(--bad);}
   .summary b{color:var(--text);font-size:15px;}
   .search{width:100%;padding:11px 12px;border-radius:11px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:16px;outline:none;margin-bottom:12px;box-shadow:var(--shadow);}
   .search:focus{border-color:var(--accent);}
@@ -185,14 +186,66 @@
 // ======== сервер ========
 var API = null;
 try { API = localStorage.getItem('bk72_apiUrl'); } catch (e) {}
-function api(action, params){
+var QUEUEABLE = { setAttendance:1, addPayment:1, updateChild:1, addLead:1 };   // что можно отложить до интернета
+function netErr(e){
+  var m = String(e && e.message || e);
+  return !navigator.onLine || /Failed to fetch|NetworkError|aborted|The operation|Load failed|timed out/i.test(m);
+}
+function api(action, params, timeout){
   if (!API) return Promise.reject(new Error('Сервер не подключён — откройте Настройки'));
   var ctl = window.AbortController ? new AbortController() : null;
-  if (ctl) setTimeout(function(){ ctl.abort(); }, 25000);     // чтобы запрос не висел вечно
+  if (ctl) setTimeout(function(){ ctl.abort(); }, timeout || 25000);     // чтобы запрос не висел вечно
   return fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, signal: ctl?ctl.signal:undefined, body:JSON.stringify({action:action, params:params||[]}) })
     .then(function(r){ if (!r.ok) throw new Error('Сервер ответил ' + r.status); return r.json(); })
-    .then(function(d){ if (d.ok) return d.result; throw new Error(d.error || 'Ошибка сервера'); });
+    .then(function(d){
+      if (d.ok) return d.result;
+      var e = d.error || 'Ошибка сервера';
+      if (/Неизвестное действие/i.test(e)) e = 'Таблица отвечает старым кодом. В Apps Script: Развернуть → Управление развертываниями → карандаш → Версия: Новая версия → Развернуть.';
+      throw new Error(e);
+    });
 }
+
+// ======== офлайн: кеш данных и очередь отправки ========
+function cacheSave(d){ try{ localStorage.setItem('bk72_data', JSON.stringify({t:Date.now(), d:d})); }catch(e){} }
+function cacheLoad(){ try{ var v=JSON.parse(localStorage.getItem('bk72_data')||'null'); return v&&v.d?v:null; }catch(e){ return null; } }
+function queueGet(){ try{ return JSON.parse(localStorage.getItem('bk72_queue')||'[]'); }catch(e){ return []; } }
+function queueSet(a){ try{ localStorage.setItem('bk72_queue', JSON.stringify(a)); }catch(e){} }
+function queueAdd(action, params){ var a=queueGet(); a.push({action:action, params:params, t:Date.now()}); queueSet(a); }
+function queueCount(){ return queueGet().length; }
+/** Отправляет отложенное по очереди; вызывается при появлении связи. */
+var flushing=false;
+function flush(){
+  if (flushing || !API || !navigator.onLine) return Promise.resolve(0);
+  var a=queueGet();
+  if (!a.length) return Promise.resolve(0);
+  flushing=true;
+  var sent=0;
+  var step=function(){
+    var list=queueGet();
+    if (!list.length) return Promise.resolve();
+    var it=list[0];
+    return api(it.action, it.params, 20000).then(function(){
+      sent++; var rest=queueGet(); rest.shift(); queueSet(rest); return step();
+    }).catch(function(e){
+      if (netErr(e)) return;                               // связи всё ещё нет — ждём
+      var rest=queueGet(); rest.shift(); queueSet(rest);   // сервер отказал — не крутим вечно
+      toast('Не удалось отправить: '+e.message);
+      return step();
+    });
+  };
+  return step().then(function(){
+    flushing=false;
+    if (sent){ toast('Отправлено в таблицу: '+sent); return load(true); }
+  }).catch(function(){ flushing=false; });
+}
+/** Отправка изменения: офлайн — в очередь, онлайн — сразу. */
+function send(action, params){
+  return api(action, params).catch(function(e){
+    if (QUEUEABLE[action] && netErr(e)){ queueAdd(action, params); render(); return { queued:true }; }
+    throw e;
+  });
+}
+window.addEventListener('online', function(){ flush(); });
 
 // ======== состояние ========
 var S = null, screen = 'main', bi = 0, sel = {}, q = '', loading = false, pending = 0, lastLoad = 0, sheetKey = null;
@@ -238,19 +291,27 @@ function load(silent){
   if (!API){ S=null; render(); return Promise.resolve(); }
   if (loading) return Promise.resolve();
   loading=true; if(!silent) render(); spin(true);
-  return api('getAppData').then(function(d){
-    loading=false; lastLoad=Date.now(); S=d;
+  return api('getAppData',[!!silent]).then(function(d){
+    loading=false; lastLoad=Date.now(); S=d; cacheSave(d);
     if (bi>=branches().length) bi=0;
-    if (S.configured && screen!=='settings' && screen!=='leads') {
-      if (session && session.day !== today()) session = null;        // наступил новый день — спросим заново
-      if (!session) {
-        var tr = trainsToday();
-        if (tr.length) { openStart(tr[0]); return; }                 // сегодня тренировка — стартовый экран
-        session = { branch: bname(), iso: null, day: today(), skipped: true };   // обычный день — сразу список
-      }
-    }
+    if (route()) return;
     render(); refreshSheet();
-  }).catch(function(e){ loading=false; spin(false); if(!silent){ render(); } toast(e.message); });
+  }).catch(function(e){
+    loading=false; spin(false);
+    if (netErr(e) && S){ render(); return; }                     // офлайн — работаем на кеше
+    if(!silent){ render(); }
+    toast(e.message);
+  });
+}
+/** Куда попадаем после получения данных: стартовый экран только в день тренировки. */
+function route(){
+  if (!S || !S.configured || screen==='settings' || screen==='leads') return false;
+  if (session && session.day !== today()) session = null;            // наступил новый день — спросим заново
+  if (session) return false;
+  var tr = trainsToday();
+  if (tr.length) { openStart(tr[0]); return true; }                  // сегодня тренировка — стартовый экран
+  session = { branch: bname(), iso: null, day: today(), skipped: true };
+  return false;
 }
 function spin(){}
 setInterval(function(){
@@ -313,6 +374,8 @@ function pickDate(iso){ sel[bname()]=iso; render(); }
 function summary(b){
   var s=curIso(), d=new Date(s+'T12:00:00'), n=b.kids.filter(function(k){ return k.attendance[s]; }).length;
   var mark = s===today() ? '<span class="tag g">сегодня</span>' : '<span class="tag w">другой день</span>';
+  var qn = queueCount();
+  if (!navigator.onLine || qn) mark += '<span class="tag off">'+(navigator.onLine?'':'офлайн')+(qn?(navigator.onLine?'':' · ')+qn+' ждут':'')+'</span>';
   return '<div class="summary"><span>'+DOW[d.getDay()].toLowerCase()+', '+d.getDate()+' '+GEN[d.getMonth()]+' '+mark+
     ' <a href="#" onclick="openStart(bi);return false;" style="color:var(--accent);text-decoration:none;font-weight:650">сменить</a></span>'+
     '<span>пришли <b>'+n+'</b> из '+b.kids.length+'</span></div>';
@@ -392,8 +455,17 @@ function doAddLead(){
   var name=$('ln').value.trim();
   if(!name){ toast('Укажите имя'); return; }
   $('lgo').disabled=true; pending++;
-  api('addLead',[branches()[lbranch], name, $('lp').value.trim(), ltrial, $('lc').value.trim()])
-    .then(function(ls){ S.leads=ls; closeSheet(); screen='leads'; render(); toast(name+' — записан(а)'); })
+  var br=branches()[lbranch], ph=$('lp').value.trim(), note=$('lc').value.trim();
+  send('addLead',[br, name, ph, ltrial, note])
+    .then(function(ls){
+      if (ls && ls.queued){
+        var d=ltrial?new Date(ltrial+'T12:00:00'):null;
+        S.leads=(S.leads||[]); S.leads.unshift({created:'—',branch:br,name:name,phone:ph,trial:ltrial||'',
+          trialLabel:d?(pad(d.getDate())+'.'+pad(d.getMonth()+1)):'',status:'Записался',group:'',note:note,id:'tmp-'+Date.now(),offline:true});
+        cacheSave(S); closeSheet(); screen='leads'; render(); toast('Запишется в таблицу, когда появится интернет'); return;
+      }
+      S.leads=ls; cacheSave(S); closeSheet(); screen='leads'; render(); toast(name+' — записан(а)');
+    })
     .catch(function(e){ toast('Ошибка: '+e.message); var x=$('lgo'); if(x) x.disabled=false; }).then(function(){ pending--; });
 }
 function lead(id){ var l=leads().filter(function(x){ return x.id===id; }); return l[0]||null; }
@@ -529,9 +601,10 @@ function toggle(id, iso){
   if (val) k.attendance[iso]=true; else delete k.attendance[iso];
   k.visits+=val?1:-1; k.remainder=k.balance-k.visits*k.price;
   render(); refreshSheet(); pending++;
-  api('setAttendance',[branch,id,iso,val]).then(function(r){
+  send('setAttendance',[branch,id,iso,val]).then(function(r){
+    if (r && r.queued){ cacheSave(S); render(); refreshSheet(); return; }
     var kk=kid(id); if(kk){ kk.visits=r.visits; kk.remainder=r.remainder; kk.balance=r.balance; kk.price=r.price; }
-    render(); refreshSheet();
+    cacheSave(S); render(); refreshSheet();
   }).catch(function(e){
     var kk=kid(id); if(kk){ if(val) delete kk.attendance[iso]; else kk.attendance[iso]=true; kk.visits+=val?-1:1; kk.remainder=kk.balance-kk.visits*kk.price; }
     render(); refreshSheet(); toast('Не сохранилось: '+e.message);
@@ -612,9 +685,15 @@ function psum(){ var n=Math.max(1,Number($('pc').value)||1), s=ptype==='abon'?n*
   $('pg').textContent='Записать · '+rub(s)+(ptype==='abon'?' ('+n+' × '+rub(S.config.abonPrice)+')':''); }
 function doPay(id){
   var n=ptype==='abon'?Math.max(1,Number($('pc').value)||1):1, branch=bname(); $('pg').disabled=true; pending++;
-  api('addPayment',[branch,id,ptype,n]).then(function(r){
-    var k=kid(id); if(k){ k.balance=r.balance; k.price=r.price; k.remainder=r.remainder; k.visits=r.visits; k.payType=ptype==='single'?'РАЗОВОЕ':'АБОНЕМЕНТ'; }
-    render(); openKid(id); toast('Оплата записана');
+  send('addPayment',[branch,id,ptype,n]).then(function(r){
+    var k=kid(id);
+    if (r && r.queued){
+      var amount = ptype==='abon' ? n*S.config.abonPrice : S.config.singlePrice;
+      if(k){ k.balance+=amount; k.price=ptype==='single'?S.config.singlePrice:S.config.abonPrice; k.payType=ptype==='single'?'РАЗОВОЕ':'АБОНЕМЕНТ'; k.remainder=k.balance-k.visits*k.price; }
+      cacheSave(S); render(); openKid(id); toast('Оплата сохранится, когда появится интернет'); return;
+    }
+    if(k){ k.balance=r.balance; k.price=r.price; k.remainder=r.remainder; k.visits=r.visits; k.payType=ptype==='single'?'РАЗОВОЕ':'АБОНЕМЕНТ'; }
+    cacheSave(S); render(); openKid(id); toast('Оплата записана');
   }).catch(function(e){ toast('Ошибка: '+e.message); var g=$('pg'); if(g) g.disabled=false; }).then(function(){ pending--; });
 }
 
@@ -681,7 +760,14 @@ function doEdit(id){
   var f={name:$('en').value.trim(), group:groupVal('eg'), phone1:$('e1').value.trim(), phone2:$('e2').value.trim(), payType:(etype==='single'?'РАЗОВОЕ':'АБОНЕМЕНТ'), price:$('ep').value, balance:$('eb').value}, branch=bname();
   if(!f.name||!f.group){ toast('Имя и группа обязательны'); return; }
   $('ego').disabled=true; pending++;
-  api('updateChild',[branch,id,f]).then(function(b){ S.branches[branch]=b; render(); openKid(id); toast('Сохранено'); })
+  send('updateChild',[branch,id,f]).then(function(b){
+    if (b && b.queued){
+      var k=kid(id);
+      if(k){ k.name=f.name; k.group=f.group; k.phone1=f.phone1; k.phone2=f.phone2; k.payType=f.payType; k.price=Number(f.price)||k.price; k.balance=Number(f.balance)||0; k.remainder=k.balance-k.visits*k.price; }
+      cacheSave(S); render(); openKid(id); toast('Сохранится, когда появится интернет'); return;
+    }
+    S.branches[branch]=b; cacheSave(S); render(); openKid(id); toast('Сохранено');
+  })
     .catch(function(e){ toast('Ошибка: '+e.message); var x=$('ego'); if(x) x.disabled=false; }).then(function(){ pending--; });
 }
 
@@ -751,7 +837,11 @@ function openLog(){
 }
 
 if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
-render(); load(false);
+var cached = cacheLoad();
+if (cached && API){ S = cached.d; if (bi>=branches().length) bi=0; route(); }   // мгновенный старт из кеша
+render();
+load(!!cached).then(function(){ return flush(); });
+document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='visible') flush(); });
 </script>
 </body>
 </html>
