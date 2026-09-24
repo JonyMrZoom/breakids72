@@ -109,6 +109,10 @@
   .tags .tag{padding:10px 14px;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:14px;font-weight:650;cursor:pointer;}
   .tags .tag.on{background:var(--accent);border-color:var(--accent);color:#fff;}
   .tags .tag.new{color:var(--muted);border-style:dashed;}
+  .tab .cnt{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;line-height:18px;text-align:center;}
+  .tab.on .cnt{background:#fff;color:var(--accent);}
+  .mark.join{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .mark.join svg{stroke:#fff;}
   .tags .tag.new.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);border-style:solid;}
   .stats{display:flex;gap:8px;margin-top:10px;}
   .stat{flex:1;background:#f8fafc;border:1px solid var(--border);border-radius:13px;padding:10px 6px;text-align:center;}
@@ -237,7 +241,7 @@ function load(silent){
   return api('getAppData').then(function(d){
     loading=false; lastLoad=Date.now(); S=d;
     if (bi>=branches().length) bi=0;
-    if (S.configured && screen!=='settings') {
+    if (S.configured && screen!=='settings' && screen!=='leads') {
       if (session && session.day !== today()) session = null;        // наступил новый день — спросим заново
       if (!session) {
         var tr = trainsToday();
@@ -259,12 +263,13 @@ document.addEventListener('visibilitychange', function(){ if (document.visibilit
 function render(){
   if (screen==='settings') return renderSettings();
   if (screen==='start') return renderStart();
+  if (screen==='leads') return renderLeads();
   var c=document.querySelector('.content'), y=c?c.scrollTop:0, st=document.querySelector('.strip'), x=st?st.scrollLeft:null;
-  var tabs=branches().map(function(n,i){ return '<div class="tab'+(i===bi?' on':'')+'" onclick="setBranch('+i+')">'+esc(n)+'</div>'; }).join('');
+  var tabs=tabsHtml();
   var h='<div class="top"><div class="row"><div class="logo"><img src="icon-192.png" alt=""></div>'+
     '<div class="grow"><div class="title">БРЕЙКИДС72</div><div class="sub">'+(S&&S.configured?esc(S.monthLabel):'не подключено')+'</div></div>'+
     '<button class="ib" onclick="openSettings()" aria-label="Настройки">'+IC.gear+'</button></div>'+
-    (tabs?'<div class="tabs">'+tabs+'</div>':'')+'</div>';
+    tabs+'</div>';
 
   if (!S && loading) h+='<div class="center"><div class="spinner"></div></div>';
   else if (!S || !S.configured) h+='<div class="content"><div class="empty"><h3>Приложение не подключено</h3>Укажите адрес сервера в настройках — он выдаётся при публикации скрипта из таблицы.<button class="btn p" style="max-width:260px;margin:18px auto 0" onclick="openSettings()">Открыть настройки</button></div></div>';
@@ -282,7 +287,19 @@ function render(){
   st=document.querySelector('.strip');
   if (st){ if (x!==null) st.scrollLeft=x; else { var s=st.querySelector('.sel'); if(s) st.scrollLeft=s.offsetLeft-st.clientWidth/2+s.clientWidth/2; } }
 }
-function setBranch(i){ bi=i; try{localStorage.setItem('bk72_branch',i);}catch(e){} var st=document.querySelector('.strip'); if(st) st.remove(); var c=document.querySelector('.content'); if(c) c.scrollTop=0; render(); }
+function tabsHtml(){
+  if (!S || !S.configured) return '';
+  var t=branches().map(function(n,i){
+    return '<div class="tab'+(screen==='main'&&i===bi?' on':'')+'" onclick="setBranch('+i+')">'+esc(n)+'</div>';
+  }).join('');
+  var n=activeLeads().length;
+  t+='<div class="tab'+(screen==='leads'?' on':'')+'" onclick="openLeads()">Записались'+(n?' <b class="cnt">'+n+'</b>':'')+'</div>';
+  return '<div class="tabs">'+t+'</div>';
+}
+function leads(){ return (S && S.leads) ? S.leads : []; }
+function activeLeads(){ return leads().filter(function(l){ return l.status!==DONE; }); }
+var DONE='Занимается';
+function setBranch(i){ bi=i; screen='main'; try{localStorage.setItem('bk72_branch',i);}catch(e){} var st=document.querySelector('.strip'); if(st) st.remove(); var c=document.querySelector('.content'); if(c) c.scrollTop=0; render(); }
 
 function strip(b){
   if (!b.dates.length) return '<div class="err">В таблице нет дат тренировок (строка 2, начиная со столбца K).</div>';
@@ -318,6 +335,109 @@ function filter(){
   var v=q.trim().toLowerCase();
   document.querySelectorAll('.card[data-n]').forEach(function(e){ e.hidden = !!v && e.getAttribute('data-n').indexOf(v)<0; });
   document.querySelectorAll('.grp').forEach(function(g){ g.hidden = !!v && !g.querySelector('.card:not([hidden])'); });
+}
+
+// ======== записались (новички до зачисления) ========
+function openLeads(){ closeSheet(); screen='leads'; q=''; render(); load(true); }
+function renderLeads(){
+  var act=activeLeads(), done=leads().filter(function(l){ return l.status===DONE; });
+  var h='<div class="top"><div class="row"><div class="logo"><img src="icon-192.png" alt=""></div>'+
+    '<div class="grow"><div class="title">Записались</div><div class="sub">новички до зачисления в группу</div></div>'+
+    '<button class="ib" onclick="openSettings()" aria-label="Настройки">'+IC.gear+'</button></div>'+tabsHtml()+'</div><div class="content">';
+  if (!act.length && !done.length) h+='<div class="empty"><h3>Пока никого нет</h3>Нажмите «+», чтобы записать новичка на пробное занятие. В таблицу он попадёт только когда вы выберете ему группу.</div>';
+  else {
+    if (act.length){
+      h+='<div class="grp"><div class="gh"><span>Ждут пробного</span><span>'+act.length+'</span></div>';
+      h+=act.map(function(l){
+        var when=l.trialLabel?('пробное '+esc(l.trialLabel)):'дата не выбрана';
+        return '<div class="card"><div class="main" onclick="openLead(\''+l.id+'\')"><div class="nm">'+esc(l.name)+'</div>'+
+          '<div class="meta"><span class="pill v">'+esc(when)+'</span><span class="pill ok">'+esc(l.branch||'—')+'</span></div></div>'+
+          '<button class="mark join" onclick="openJoin(\''+l.id+'\')" aria-label="Зачислить">'+IC.plus+'</button></div>';
+      }).join('')+'</div>';
+    }
+    if (done.length){
+      h+='<div class="grp"><div class="gh"><span>Зачислены</span><span>'+done.length+'</span></div>';
+      h+=done.slice(0,20).map(function(l){
+        return '<div class="card"><div class="main" onclick="openLead(\''+l.id+'\')"><div class="nm">'+esc(l.name)+'</div>'+
+          '<div class="meta"><span class="pill ok">'+esc(l.group||'в группе')+'</span><span class="pill v">'+esc(l.branch||'')+'</span></div></div></div>';
+      }).join('')+'</div>';
+    }
+  }
+  $('app').innerHTML=h+'</div><button class="fab" onclick="openAddLead()" aria-label="Записать новичка">'+IC.plus+'</button>';
+}
+var lbranch=0, ltrial=null;
+function openAddLead(){
+  lbranch=bi; ltrial=null;
+  sheet('<h2>Записать новичка</h2><div class="sub">попадёт во вкладку «Записались», не в таблицу</div><div style="height:12px"></div>'+
+    '<div class="field"><label for="ln">Имя ребёнка</label><input id="ln" autocomplete="off"></div>'+
+    '<div class="field"><label for="lp">Телефон родителя</label><input id="lp" type="tel" placeholder="+7 …"></div>'+
+    '<div class="field"><label>Филиал</label><div class="tags" id="lbt">'+branches().map(function(n,i){
+      return '<button type="button" class="tag'+(i===lbranch?' on':'')+'" onclick="pickLeadBranch('+i+')">'+esc(n)+'</button>';
+    }).join('')+'</div></div>'+
+    '<div class="field"><label>Когда придёт на пробное</label><div class="tags" id="ldt">'+leadDays()+'</div></div>'+
+    '<div class="field"><label for="lc">Комментарий</label><input id="lc" placeholder="возраст, откуда узнали"></div>'+
+    '<button class="btn p" id="lgo" onclick="doAddLead()">Записать</button><button class="btn q" onclick="closeSheet()">Отмена</button>', 'lead');
+}
+function leadDays(){
+  var b=S.branches[branches()[lbranch]]||{}, t=today();
+  var ds=(b.dates||[]).filter(function(d){ return d.iso>=t; }).slice(0,8);
+  if(!ds.length) ds=(b.dates||[]).slice(-4);
+  return ds.map(function(d){
+    return '<button type="button" class="tag'+(d.iso===ltrial?' on':'')+'" onclick="pickTrial(\''+d.iso+'\')">'+d.dow+' '+d.label.slice(0,2)+'</button>';
+  }).join('')||'<span class="hint">нет дат тренировок</span>';
+}
+function pickLeadBranch(i){ lbranch=i; ltrial=null; $('lbt').querySelectorAll('.tag').forEach(function(b,j){ b.classList.toggle('on', j===i); }); $('ldt').innerHTML=leadDays(); }
+function pickTrial(iso){ ltrial = ltrial===iso ? null : iso; $('ldt').innerHTML=leadDays(); }
+function doAddLead(){
+  var name=$('ln').value.trim();
+  if(!name){ toast('Укажите имя'); return; }
+  $('lgo').disabled=true; pending++;
+  api('addLead',[branches()[lbranch], name, $('lp').value.trim(), ltrial, $('lc').value.trim()])
+    .then(function(ls){ S.leads=ls; closeSheet(); screen='leads'; render(); toast(name+' — записан(а)'); })
+    .catch(function(e){ toast('Ошибка: '+e.message); var x=$('lgo'); if(x) x.disabled=false; }).then(function(){ pending--; });
+}
+function lead(id){ var l=leads().filter(function(x){ return x.id===id; }); return l[0]||null; }
+function openLead(id){
+  var l=lead(id); if(!l) return;
+  var ph=l.phone?('<div class="two" style="margin-bottom:12px"><a class="btn s" href="tel:'+esc(l.phone.replace(/[^\d+]/g,''))+'">Позвонить</a>'+
+    '<a class="btn g" href="https://wa.me/'+esc(l.phone.replace(/\D/g,''))+'" target="_blank" rel="noopener">WhatsApp</a></div>'):'';
+  sheet('<h2>'+esc(l.name)+'</h2><div class="sub">'+esc(l.branch)+' · '+esc(l.status)+(l.trialLabel?' · пробное '+esc(l.trialLabel):'')+'</div><div style="height:12px"></div>'+
+    (l.note?'<div class="hint" style="margin-bottom:12px">'+esc(l.note)+'</div>':'')+
+    (l.phone?'<div class="field"><label>Телефон</label><div style="font-size:17px;font-weight:650">'+esc(l.phone)+'</div></div>':'')+ph+
+    (l.status!==DONE?'<button class="btn p" onclick="openJoin(\''+id+'\')">Зачислить в группу</button>':'<div class="hint">Уже занимается в группе «'+esc(l.group)+'».</div>')+
+    '<button class="btn q" onclick="delLead(\''+id+'\')">Удалить запись</button>'+
+    '<button class="btn q" onclick="closeSheet()">Закрыть</button>', 'lead:'+id);
+}
+function delLead(id){
+  if(!confirm('Удалить запись?')) return;
+  pending++;
+  api('deleteLead',[id]).then(function(ls){ S.leads=ls; closeSheet(); render(); toast('Удалено'); })
+    .catch(function(e){ toast('Ошибка: '+e.message); }).then(function(){ pending--; });
+}
+var jtype='abon';
+function openJoin(id){
+  var l=lead(id); if(!l) return;
+  jtype='abon';
+  var i=branches().indexOf(l.branch); if(i>=0) bi=i;
+  var g=groups(B()).order;
+  sheet('<h2>Зачислить</h2><div class="sub">'+esc(l.name)+' · '+esc(l.branch)+'</div><div style="height:12px"></div>'+
+    '<div class="field"><label>Группа</label><div class="tags" id="jgt">'+
+      g.map(function(x,k){ return '<button type="button" class="tag'+(k===0?' on':'')+'" data-g="'+esc(x)+'" onclick="pickGroup(\'jg\',this)">'+esc(x)+'</button>'; }).join('')+
+      '<button type="button" class="tag new'+(g.length?'':' on')+'" data-g="__new" onclick="pickGroup(\'jg\',this)">+ новая</button>'+
+    '</div><input id="jgn" placeholder="Название новой группы"'+(g.length?' hidden':'')+'></div>'+
+    '<div class="field"><label>Как платит</label><div class="pick" id="jp"><button class="on" data-t="abon" onclick="setJ(\'abon\')">Абонемент</button><button data-t="single" onclick="setJ(\'single\')">Разово</button></div></div>'+
+    '<div class="hint" style="margin-bottom:12px">Ребёнок появится в таблице филиала, телефон перенесётся. Запись получит статус «Занимается».</div>'+
+    '<button class="btn p" id="jgo" onclick="doJoin(\''+id+'\')">Зачислить</button><button class="btn q" onclick="openLead(\''+id+'\')">Назад</button>', 'join:'+id);
+}
+function setJ(t){ jtype=t; document.querySelectorAll('#jp button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-t')===t); }); }
+function doJoin(id){
+  var g=groupVal('jg');
+  if(!g){ toast('Выберите группу'); return; }
+  $('jgo').disabled=true; pending++;
+  api('convertLead',[id,g,jtype]).then(function(r){
+    S.branches[r.branch]=r.data; S.leads=r.leads;
+    closeSheet(); render(); toast('Зачислен(а) в «'+g+'»');
+  }).catch(function(e){ toast('Ошибка: '+e.message); var x=$('jgo'); if(x) x.disabled=false; }).then(function(){ pending--; });
 }
 
 // ======== стартовый экран: адрес и дата тренировки ========
