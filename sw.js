@@ -2,7 +2,7 @@
 // Файлы приложения берутся из сети (чтобы обновления с GitHub приходили сразу),
 // а кэш нужен только чтобы приложение открывалось при плохой связи.
 // Данные таблицы (запросы к Google Apps Script) не кэшируются никогда.
-var CACHE = 'breakids72-v2';
+var CACHE = 'breakids72-v3';
 var SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {

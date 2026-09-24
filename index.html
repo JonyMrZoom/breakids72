@@ -4,22 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Брейкидс72">
-<meta name="theme-color" content="#15171c">
+<meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 <title>БРЕЙКИДС72 — Посещаемость</title>
 <style>
   :root{
-    --bg:#15171c; --bg2:#1c2028; --card:#21252d; --card-hi:#2a2f39;
-    --text:#f5f2ea; --muted:#8a8f9c; --faint:#5d626d;
-    --accent:#ff5a2e; --accent-soft:rgba(255,90,46,.14);
-    --good:#3ddc84; --good-soft:rgba(61,220,132,.14);
-    --bad:#ff6b6b; --bad-soft:rgba(255,107,107,.13);
-    --border:rgba(255,255,255,.08);
-    color-scheme:dark;
+    --bg:#f4f6f9; --bg2:#ffffff; --card:#ffffff; --card-hi:#eef1f6;
+    --text:#151a22; --muted:#667085; --faint:#98a2b3;
+    --accent:#ff5a2e; --accent-soft:#fff1ec;
+    --good:#15a35b; --good-soft:#e7f7ee;
+    --bad:#d92d20; --bad-soft:#fdeceb;
+    --border:#e3e8ef; --shadow:0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.04);
+    color-scheme:light;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -30,88 +30,88 @@
   ::-webkit-scrollbar{display:none;}
   #app{display:flex; flex-direction:column; height:100%;}
 
-  .top{padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px; background:linear-gradient(180deg,var(--bg2),var(--bg)); border-bottom:1px solid var(--border); flex-shrink:0;}
+  .top{padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px; background:var(--bg2); border-bottom:1px solid var(--border); flex-shrink:0;}
   .row{display:flex; align-items:center; gap:10px;}
   .grow{flex:1; min-width:0;}
   .logo{width:32px;height:32px;border-radius:9px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;}
   .logo img{width:100%;height:100%;display:block;}
   .title{font-weight:800;font-size:16px;}
   .sub{font-size:12px;color:var(--muted);}
-  .ib{width:40px;height:40px;border-radius:11px;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
-  .ib svg{width:19px;height:19px;stroke:var(--text);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  .ib{width:40px;height:40px;border-radius:11px;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:var(--shadow);}
+  .ib svg{width:19px;height:19px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
   .ib.spin svg{animation:spin .8s linear infinite;}
   .tabs{display:flex;gap:6px;margin-top:12px;}
-  .tab{flex:1;text-align:center;padding:9px 6px;border-radius:10px;font-size:13px;font-weight:650;background:var(--card);color:var(--muted);border:1px solid var(--border);cursor:pointer;}
-  .tab.on{background:var(--accent);color:#1a0d06;border-color:var(--accent);}
+  .tab{flex:1;text-align:center;padding:10px 6px;border-radius:10px;font-size:13px;font-weight:650;background:var(--card);color:var(--muted);border:1px solid var(--border);cursor:pointer;}
+  .tab.on{background:var(--accent);color:#fff;border-color:var(--accent);}
 
   .content{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px 16px 110px;}
 
   .strip{display:flex;gap:7px;overflow-x:auto;margin:0 -16px;padding:2px 16px 4px;}
-  .chip{flex-shrink:0;width:54px;padding:8px 0 7px;border-radius:13px;text-align:center;cursor:pointer;background:var(--card);border:1px solid var(--border);position:relative;}
+  .chip{flex-shrink:0;width:54px;padding:8px 0 7px;border-radius:13px;text-align:center;cursor:pointer;background:var(--card);border:1px solid var(--border);position:relative;box-shadow:var(--shadow);}
   .chip .dw{font-size:10.5px;font-weight:700;color:var(--muted);}
   .chip .dd{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;}
   .chip .ct{font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums;}
-  .chip.sel{background:var(--accent);border-color:var(--accent);color:#1a0d06;}
-  .chip.sel .dw,.chip.sel .ct{color:rgba(26,13,6,.7);}
+  .chip.sel{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(255,90,46,.28);}
+  .chip.sel .dw,.chip.sel .ct{color:rgba(255,255,255,.85);}
   .chip.today::after{content:'';position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--good);}
 
   .summary{display:flex;justify-content:space-between;align-items:baseline;margin:14px 2px 10px;font-size:13px;color:var(--muted);}
   .summary b{color:var(--text);font-size:15px;}
-  .search{width:100%;padding:10px 12px;border-radius:11px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:16px;outline:none;margin-bottom:12px;}
+  .search{width:100%;padding:11px 12px;border-radius:11px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:16px;outline:none;margin-bottom:12px;box-shadow:var(--shadow);}
   .search:focus{border-color:var(--accent);}
 
   .gh{display:flex;justify-content:space-between;padding:4px 4px 8px;color:var(--muted);font-size:11.5px;font-weight:750;letter-spacing:.5px;text-transform:uppercase;}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:10px 10px 10px 13px;margin-bottom:7px;display:flex;align-items:center;gap:10px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:11px 11px 11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);}
   .card .main{flex:1;min-width:0;cursor:pointer;}
   .card .nm{font-weight:650;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .meta{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center;}
-  .pill{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,.06);color:var(--muted);font-variant-numeric:tabular-nums;}
+  .pill{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:20px;background:#f2f4f7;color:var(--muted);font-variant-numeric:tabular-nums;}
   .pill.v{color:var(--accent);background:var(--accent-soft);}
   .pill.ok{color:var(--good);background:var(--good-soft);}
   .pill.debt{color:var(--bad);background:var(--bad-soft);}
-  .mark{width:50px;height:50px;border-radius:14px;flex-shrink:0;border:1.5px solid rgba(255,255,255,.16);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .mark{width:50px;height:50px;border-radius:14px;flex-shrink:0;border:1.5px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;}
   .mark svg{width:24px;height:24px;stroke:transparent;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;}
   .mark.on{background:var(--good);border-color:var(--good);}
-  .mark.on svg{stroke:#0a1f12;}
+  .mark.on svg{stroke:#fff;}
   .mark.busy{opacity:.55;}
 
   .empty{text-align:center;color:var(--muted);padding:50px 16px;font-size:14px;line-height:1.6;}
   .empty h3{color:var(--text);font-size:17px;margin:0 0 6px;}
   .err{background:var(--bad-soft);border:1px solid rgba(255,107,107,.4);border-radius:14px;padding:14px;font-size:14px;line-height:1.5;}
 
-  .fab{position:fixed;right:18px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:18px;background:var(--accent);border:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(255,90,46,.35);z-index:20;cursor:pointer;}
-  .fab svg{width:26px;height:26px;stroke:#1a0d06;stroke-width:2.6;stroke-linecap:round;fill:none;}
+  .fab{position:fixed;right:18px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:18px;background:var(--accent);border:none;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(255,90,46,.32);z-index:20;cursor:pointer;}
+  .fab svg{width:26px;height:26px;stroke:#fff;stroke-width:2.6;stroke-linecap:round;fill:none;}
 
-  .back{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:30;display:flex;align-items:flex-end;}
+  .back{position:fixed;inset:0;background:rgba(16,24,40,.45);z-index:30;display:flex;align-items:flex-end;}
   .sheet{width:100%;max-height:92vh;overflow-y:auto;background:var(--bg2);border-radius:20px 20px 0 0;border-top:1px solid var(--border);padding:8px 18px calc(22px + env(safe-area-inset-bottom,0px));}
   .handle{width:38px;height:4px;border-radius:3px;background:var(--faint);margin:6px auto 14px;}
   .sheet h2{font-size:19px;margin:0 0 2px;font-weight:800;}
   .sec{font-size:11.5px;color:var(--muted);font-weight:750;letter-spacing:.5px;text-transform:uppercase;margin:18px 0 8px;}
   .field{margin-bottom:12px;}
   .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:650;}
-  .field input,.field select{width:100%;padding:12px;border-radius:11px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:16px;outline:none;}
+  .field input,.field select{width:100%;padding:12px;border-radius:11px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:16px;outline:none;}
   .field input:focus,.field select:focus{border-color:var(--accent);}
   .hint{font-size:12px;color:var(--faint);margin-top:5px;line-height:1.45;}
   .two{display:flex;gap:10px;} .two>*{flex:1;min-width:0;}
   .btn{display:flex;align-items:center;justify-content:center;width:100%;padding:13px;border-radius:12px;border:none;font-weight:700;font-size:15px;margin-top:8px;cursor:pointer;text-decoration:none;}
-  .btn.p{background:var(--accent);color:#1a0d06;}
-  .btn.g{background:var(--good);color:#0a1f12;}
+  .btn.p{background:var(--accent);color:#fff;box-shadow:0 6px 16px rgba(255,90,46,.25);}
+  .btn.g{background:var(--good);color:#fff;}
   .btn.s{background:var(--card);border:1px solid var(--border);}
   .btn.q{background:transparent;color:var(--muted);}
   .btn:disabled{opacity:.5;}
   .pick{display:flex;gap:8px;margin-bottom:14px;}
-  .pick button{flex:1;padding:12px 8px;border-radius:11px;font-weight:700;font-size:14px;background:var(--card);border:1px solid var(--border);color:var(--muted);cursor:pointer;}
+  .pick button{flex:1;padding:12px 8px;border-radius:11px;font-weight:700;font-size:14px;background:#fff;border:1px solid var(--border);color:var(--muted);cursor:pointer;}
   .pick button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
   .stats{display:flex;gap:8px;margin-top:10px;}
-  .stat{flex:1;background:var(--card);border:1px solid var(--border);border-radius:13px;padding:10px 6px;text-align:center;}
+  .stat{flex:1;background:#f8fafc;border:1px solid var(--border);border-radius:13px;padding:10px 6px;text-align:center;}
   .stat b{display:block;font-size:20px;font-variant-numeric:tabular-nums;}
   .stat span{font-size:10.5px;color:var(--muted);text-transform:uppercase;}
 
   .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
   .cal .h{font-size:10.5px;color:var(--faint);text-align:center;font-weight:700;}
   .cal .d{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:650;color:var(--faint);position:relative;font-variant-numeric:tabular-nums;}
-  .cal .d.tr{cursor:pointer;color:var(--text);border:1.5px solid rgba(255,255,255,.15);}
-  .cal .d.att{background:var(--good);border-color:var(--good);color:#0a1f12;}
+  .cal .d.tr{cursor:pointer;color:var(--text);border:1.5px solid var(--border);background:#fff;}
+  .cal .d.att{background:var(--good);border-color:var(--good);color:#fff;}
   .cal .d.miss{background:var(--bad-soft);border-color:rgba(255,107,107,.45);color:var(--bad);}
   .cal .d.today::after{content:'';position:absolute;bottom:4px;width:4px;height:4px;border-radius:50%;background:currentColor;}
   .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:9px;}
@@ -120,23 +120,47 @@
   .visited b{color:var(--text);font-weight:650;}
   .line{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px;}
   .line:last-child{border-bottom:none;}
-  .mini{padding:8px 11px;border-radius:10px;font-size:13px;font-weight:700;background:var(--card);border:1px solid var(--border);text-decoration:none;white-space:nowrap;}
+  .mini{padding:8px 11px;border-radius:10px;font-size:13px;font-weight:700;background:#f2f4f7;border:1px solid var(--border);text-decoration:none;white-space:nowrap;}
   .mini.wa{color:var(--good);}
   .dt{color:var(--faint);width:84px;flex-shrink:0;font-variant-numeric:tabular-nums;}
   .am{font-weight:750;font-variant-numeric:tabular-nums;}
 
-  .panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 14px 10px;margin-bottom:14px;}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 14px 10px;margin-bottom:14px;box-shadow:var(--shadow);}
   .panel h3{font-size:15px;margin:0 0 4px;display:flex;align-items:center;gap:8px;}
   .panel p{font-size:13px;color:var(--muted);line-height:1.5;margin:0 0 12px;}
   .panel .field input,.panel .field select{background:var(--bg2);}
   .st{font-size:12px;font-weight:650;padding:3px 8px;border-radius:20px;}
   .st.ok{color:var(--good);background:var(--good-soft);}
-  .st.no{color:var(--muted);background:rgba(255,255,255,.06);}
+  .st.no{color:var(--muted);background:#f2f4f7;}
 
+  .start{flex:1;overflow-y:auto;padding:calc(24px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;}
+  .start .logo{width:56px;height:56px;border-radius:16px;box-shadow:var(--shadow);}
+  .start h1{font-size:23px;margin:16px 0 4px;font-weight:800;letter-spacing:-.2px;}
+  .start .lead{color:var(--muted);font-size:14px;margin:0 0 22px;}
+  .step{font-size:12px;font-weight:750;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:0 0 10px;display:flex;align-items:center;gap:8px;}
+  .step i{width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-style:normal;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:800;}
+  .pickbig{display:flex;flex-direction:column;gap:9px;margin-bottom:24px;}
+  .pickbig button{display:flex;align-items:center;gap:12px;text-align:left;padding:15px 16px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);box-shadow:var(--shadow);cursor:pointer;}
+  .pickbig button.on{border-color:var(--accent);background:var(--accent-soft);}
+  .pickbig .t{font-weight:700;font-size:16px;}
+  .pickbig .s{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .pickbig .rad{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .pickbig button.on .rad{border-color:var(--accent);}
+  .pickbig button.on .rad::after{content:'';width:11px;height:11px;border-radius:50%;background:var(--accent);}
+  .dates{display:flex;gap:8px;overflow-x:auto;padding:2px 20px 6px;margin:0 -20px 10px;}
+  .dbtn{flex-shrink:0;min-width:74px;padding:11px 10px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);box-shadow:var(--shadow);cursor:pointer;text-align:center;}
+  .dbtn .dw{font-size:11px;font-weight:750;color:var(--muted);letter-spacing:.3px;}
+  .dbtn .dd{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:1px;}
+  .dbtn .nt{font-size:10.5px;color:var(--faint);margin-top:2px;}
+  .dbtn.on{border-color:var(--accent);background:var(--accent-soft);}
+  .dbtn.on .dw,.dbtn.on .nt{color:var(--accent);}
+  .startfoot{margin-top:auto;padding-top:18px;}
+  .confirm{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 15px;box-shadow:var(--shadow);font-size:14px;line-height:1.5;}
+  .confirm b{font-weight:750;}
   .center{flex:1;display:flex;align-items:center;justify-content:center;}
   .spinner{width:26px;height:26px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);animation:spin .7s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
-  .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:#0e1014;padding:11px 18px;border-radius:30px;font-size:13.5px;font-weight:650;border:1px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.45);max-width:calc(100% - 32px);text-align:center;}
+  .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:#151a22;color:#fff;padding:11px 18px;border-radius:30px;font-size:13.5px;font-weight:650;box-shadow:0 10px 30px rgba(16,24,40,.25);max-width:calc(100% - 32px);text-align:center;}
 </style>
 </head>
 <body>
@@ -154,6 +178,8 @@ function api(action, params){
 
 // ======== состояние ========
 var S = null, screen = 'main', bi = 0, sel = {}, q = '', loading = false, pending = 0, lastLoad = 0, sheetKey = null;
+var session = null;      // {branch, iso} — подтверждено на стартовом экране
+var pick = { bi: 0, iso: null };
 try { bi = Number(localStorage.getItem('bk72_branch')) || 0; } catch (e) {}
 var DOW = ['ВС','ПН','ВТ','СР','ЧТ','ПТ','СБ'];
 var MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
@@ -197,6 +223,7 @@ function load(silent){
   return api('getAppData').then(function(d){
     loading=false; lastLoad=Date.now(); S=d;
     if (bi>=branches().length) bi=0;
+    if (!session && S.configured && screen!=='settings') { openStart(); return; }
     render(); refreshSheet();
   }).catch(function(e){ loading=false; spin(false); if(!silent){ render(); } toast(e.message); });
 }
@@ -210,6 +237,7 @@ document.addEventListener('visibilitychange', function(){ if (document.visibilit
 // ======== главный экран ========
 function render(){
   if (screen==='settings') return renderSettings();
+  if (screen==='start') return renderStart();
   var c=document.querySelector('.content'), y=c?c.scrollTop:0, st=document.querySelector('.strip'), x=st?st.scrollLeft:null;
   var tabs=branches().map(function(n,i){ return '<div class="tab'+(i===bi?' on':'')+'" onclick="setBranch('+i+')">'+esc(n)+'</div>'; }).join('');
   var h='<div class="top"><div class="row"><div class="logo"><img src="icon-192.png" alt=""></div>'+
@@ -247,7 +275,9 @@ function strip(b){
 function pickDate(iso){ sel[bname()]=iso; render(); }
 function summary(b){
   var s=curIso(), d=new Date(s+'T12:00:00'), n=b.kids.filter(function(k){ return k.attendance[s]; }).length;
-  return '<div class="summary"><span>'+DOW[d.getDay()].toLowerCase()+', '+d.getDate()+' '+GEN[d.getMonth()]+'</span><span>пришли <b>'+n+'</b> из '+b.kids.length+'</span></div>';
+  return '<div class="summary"><span>'+DOW[d.getDay()].toLowerCase()+', '+d.getDate()+' '+GEN[d.getMonth()]+
+    ' · <a href="#" onclick="openStart();return false;" style="color:var(--accent);text-decoration:none;font-weight:650">сменить</a></span>'+
+    '<span>пришли <b>'+n+'</b> из '+b.kids.length+'</span></div>';
 }
 function list(b){
   if (!b.kids.length) return '<div class="empty"><h3>Пока нет детей</h3>Нажмите «+», чтобы добавить.</div>';
@@ -266,6 +296,69 @@ function filter(){
   var v=q.trim().toLowerCase();
   document.querySelectorAll('.card[data-n]').forEach(function(e){ e.hidden = !!v && e.getAttribute('data-n').indexOf(v)<0; });
   document.querySelectorAll('.grp').forEach(function(g){ g.hidden = !!v && !g.querySelector('.card:not([hidden])'); });
+}
+
+// ======== стартовый экран: адрес и дата тренировки ========
+function openStart(){
+  closeSheet();
+  pick.bi = Math.min(bi, Math.max(branches().length-1,0));
+  pick.iso = suggestIso(pick.bi);
+  screen = 'start'; render();
+}
+function suggestIso(idx){
+  var b = S.branches[branches()[idx]];
+  if (!b || !b.dates || !b.dates.length) return null;
+  var t = today(), best = b.dates[0].iso, bd = 1e9;
+  b.dates.forEach(function(d){
+    var diff = Math.abs(Date.parse(d.iso) - Date.parse(t));
+    if (d.iso===t) { best=d.iso; bd=-1; }
+    else if (diff < bd) { best=d.iso; bd=diff; }
+  });
+  return best;
+}
+function humanDate(iso){
+  if (!iso) return '';
+  var d = new Date(iso+'T12:00:00');
+  return DOW[d.getDay()].toLowerCase()+', '+d.getDate()+' '+GEN[d.getMonth()];
+}
+function renderStart(){
+  var list = branches().map(function(n,i){
+    var b = S.branches[n] || {};
+    var note = b.error ? 'лист не читается' : ((b.kids||[]).length+' '+plural((b.kids||[]).length,'ребёнок','ребёнка','детей')+' · '+(b.dates||[]).length+' тренировок в месяце');
+    return '<button class="'+(i===pick.bi?'on':'')+'" onclick="pickBranch('+i+')"><div class="grow"><div class="t">'+esc(n)+'</div><div class="s">'+esc(note)+'</div></div><span class="rad"></span></button>';
+  }).join('');
+
+  var b = S.branches[branches()[pick.bi]] || {}, t = today();
+  var dates = (b.dates||[]).map(function(d){
+    var note = d.iso===t ? 'сегодня' : (d.iso<t ? 'прошло' : '');
+    return '<div class="dbtn'+(d.iso===pick.iso?' on':'')+'" onclick="pickDay(\''+d.iso+'\')"><div class="dw">'+d.dow+'</div><div class="dd">'+d.label.slice(0,2)+'</div><div class="nt">'+note+'</div></div>';
+  }).join('') || '<div class="hint">В таблице нет дат тренировок этого месяца.</div>';
+
+  var ready = !!pick.iso && !b.error;
+  $('app').innerHTML =
+    '<div class="start">'+
+      '<img class="logo" src="icon-192.png" alt="">'+
+      '<h1>Тренировка</h1>'+
+      '<p class="lead">Подтвердите адрес и дату — отметки запишутся в этот день.</p>'+
+      '<div class="step"><i>1</i>Адрес</div><div class="pickbig">'+list+'</div>'+
+      '<div class="step"><i>2</i>Дата тренировки · '+esc(S.monthLabel)+'</div><div class="dates" id="dates">'+dates+'</div>'+
+      '<div class="startfoot">'+
+        (ready ? '<div class="confirm">Отмечаем <b>'+esc(humanDate(pick.iso))+'</b><br>'+esc(branches()[pick.bi])+'</div>' : '<div class="confirm">'+(b.error?esc(b.error):'Выберите дату тренировки')+'</div>')+
+        '<button class="btn p" onclick="startGo()"'+(ready?'':' disabled')+'>Начать отметку</button>'+
+        '<button class="btn q" onclick="openSettings()">Настройки</button>'+
+      '</div>'+
+    '</div>';
+  var d = $('dates'), on = d && d.querySelector('.on');
+  if (on) d.scrollLeft = on.offsetLeft - d.clientWidth/2 + on.clientWidth/2;
+}
+function pickBranch(i){ pick.bi=i; pick.iso=suggestIso(i); render(); }
+function pickDay(iso){ pick.iso=iso; render(); }
+function startGo(){
+  if (!pick.iso) return;
+  bi = pick.bi; try{ localStorage.setItem('bk72_branch', bi); }catch(e){}
+  sel[bname()] = pick.iso;
+  session = { branch: bname(), iso: pick.iso };
+  screen = 'main'; q=''; render();
 }
 
 // ======== отметка ========
@@ -413,7 +506,7 @@ function doEdit(id){
 
 // ======== настройки ========
 function openSettings(){ closeSheet(); screen='settings'; render(); }
-function closeSettings(){ screen='main'; render(); load(true); }
+function closeSettings(){ screen = session ? 'main' : 'start'; render(); load(true); }
 function renderSettings(){
   var conf=S&&S.configured, now=new Date(), m=conf?S.month.monthIdx:now.getMonth(), y=conf?S.month.year:now.getFullYear();
   var h='<div class="top"><div class="row"><button class="ib" onclick="closeSettings()" aria-label="Назад">'+IC.back+'</button><div class="title">Настройки</div></div></div><div class="content">';
@@ -442,7 +535,7 @@ function newMonth(){
   if(!confirm('Создать таблицу на следующий месяц и переключить приложение на неё?')) return;
   var b=$('snm'); b.disabled=true; b.textContent='Готовим новый месяц…';
   api('createNextMonthCopy').then(function(r){ toast('Готово: '+r.newName); return api('getAppData'); })
-    .then(function(d){ S=d; sel={}; screen='main'; render(); })
+    .then(function(d){ S=d; sel={}; session=null; openStart(); })
     .catch(function(e){ toast('Ошибка: '+e.message); b.disabled=false; b.textContent='Создать таблицу на следующий месяц'; });
 }
 function openLog(){
