@@ -164,14 +164,22 @@
   .st.no{color:var(--muted);background:#f2f4f7;}
 
   .start{flex:1;overflow-y:auto;padding:calc(22px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;
-    background:linear-gradient(180deg,#fff3ea 0%,#ffe7d8 30%,#fdf1ea 60%,var(--bg) 100%);position:relative;}
-  .start::before{content:'';position:absolute;top:-90px;right:-60px;width:280px;height:280px;border-radius:50%;
-    background:radial-gradient(circle at 30% 30%,rgba(255,138,86,.40),rgba(255,138,86,0) 70%);pointer-events:none;
-    animation:blob 16s ease-in-out infinite alternate;}
+    background:linear-gradient(170deg,#e9f0ff 0%,#e4f1f6 34%,#f0f5fc 64%,var(--bg) 100%);position:relative;overflow-x:hidden;}
+  .start::before{content:'';position:absolute;top:-110px;right:-70px;width:300px;height:300px;border-radius:50%;
+    background:radial-gradient(circle at 32% 32%,rgba(92,124,255,.34),rgba(92,124,255,0) 70%);pointer-events:none;
+    animation:blob 18s ease-in-out infinite alternate;}
+  .start::after{content:'';position:absolute;left:-90px;top:210px;width:260px;height:260px;border-radius:50%;
+    background:radial-gradient(circle at 60% 40%,rgba(38,196,178,.30),rgba(38,196,178,0) 70%);pointer-events:none;
+    animation:blob2 24s ease-in-out infinite alternate;}
   @keyframes blob{
     0%{transform:translate(0,0) scale(1);}
-    50%{transform:translate(-26px,22px) scale(1.12);}
-    100%{transform:translate(14px,-16px) scale(.96);}
+    50%{transform:translate(-30px,26px) scale(1.14);}
+    100%{transform:translate(16px,-18px) scale(.95);}
+  }
+  @keyframes blob2{
+    0%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(34px,-28px) scale(1.1);}
+    100%{transform:translate(-14px,20px) scale(.94);}
   }
   @keyframes riseIn{ from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:none;} }
   @keyframes popIn{ 0%{opacity:0;transform:scale(.86) rotate(-6deg);} 60%{transform:scale(1.06) rotate(2deg);} 100%{opacity:1;transform:none;} }
@@ -196,21 +204,21 @@
   .start.anim .btn.p::after{content:'';position:absolute;top:0;left:0;width:45%;height:100%;
     background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.45),rgba(255,255,255,0));
     animation:shine 1.1s 1.15s ease-out 1 both;}
-  @media (prefers-reduced-motion: reduce){ .start::before,.start.anim *{animation:none !important;} }
+  @media (prefers-reduced-motion: reduce){ .start::before,.start::after,.start.anim *{animation:none !important;} }
   .start>*{position:relative;z-index:1;flex:0 0 auto;}   /* ничего не сжимается по высоте */
   .start .dates{min-height:86px;}
   .start .hello{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
-  .start .logo{width:52px;height:52px;border-radius:16px;box-shadow:0 8px 22px rgba(196,88,44,.28);}
-  .start .who{min-width:0;color:#5a2f18;}
+  .start .logo{width:52px;height:52px;border-radius:16px;box-shadow:0 8px 22px rgba(40,64,120,.26);}
+  .start .who{min-width:0;color:#2a3b5c;}
   .start .who .hi{font-size:19px;font-weight:800;letter-spacing:-.2px;}
-  .start .who .dt{font-size:13px;opacity:.7;margin-top:2px;white-space:nowrap;}
-  .start h1{font-size:26px;margin:2px 0 6px;font-weight:800;letter-spacing:-.3px;color:#33180c;}
-  .start .lead{color:#8a6250;font-size:14px;margin:0 0 24px;line-height:1.45;}
-  .start .step{color:#a9765c;}
-  .start .step i{background:#ffffff;color:var(--accent);box-shadow:0 2px 6px rgba(196,88,44,.18);}
-  .start .dbtn,.start .pickbig button{box-shadow:0 6px 18px rgba(196,88,44,.10);border-color:#f6ddcd;}
-  .start .confirm{border-color:#f6ddcd;box-shadow:0 8px 22px rgba(196,88,44,.12);}
-  .start .startlinks button{color:#a9765c;}
+  .start .who .dt{font-size:13px;opacity:.72;margin-top:2px;white-space:nowrap;}
+  .start h1{font-size:26px;margin:2px 0 6px;font-weight:800;letter-spacing:-.3px;color:#16223a;}
+  .start .lead{color:#5d6b86;font-size:14px;margin:0 0 24px;line-height:1.45;}
+  .start .step{color:#6b7a96;}
+  .start .step i{background:#ffffff;color:var(--accent);box-shadow:0 2px 6px rgba(40,64,120,.18);}
+  .start .dbtn,.start .pickbig button{box-shadow:0 6px 18px rgba(40,64,120,.10);border-color:#dde5f2;}
+  .start .confirm{border-color:#dde5f2;box-shadow:0 8px 22px rgba(40,64,120,.12);}
+  .start .startlinks button{color:#6b7a96;}
   .step{font-size:12px;font-weight:750;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:0 0 10px;display:flex;align-items:center;gap:8px;}
   .step i{width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-style:normal;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:800;}
   .pickbig{display:flex;flex-direction:column;gap:9px;margin-bottom:24px;}
@@ -229,10 +237,10 @@
   .dbtn.on{border-color:var(--accent);background:var(--accent-soft);}
   .dbtn.on .dw,.dbtn.on .nt{color:var(--accent);}
   .mini{display:flex;gap:8px;margin:2px 0 6px;}
-  .mini>div{flex:1;background:#fff;border:1px solid #f6ddcd;border-radius:14px;padding:10px 8px;text-align:center;box-shadow:0 4px 14px rgba(196,88,44,.08);}
-  .mini b{display:block;font-size:19px;font-weight:800;color:#33180c;font-variant-numeric:tabular-nums;}
+  .mini>div{flex:1;background:#fff;border:1px solid #dde5f2;border-radius:14px;padding:10px 8px;text-align:center;box-shadow:0 4px 14px rgba(40,64,120,.08);}
+  .mini b{display:block;font-size:19px;font-weight:800;color:#16223a;font-variant-numeric:tabular-nums;}
   .mini b.bad{color:var(--bad);} .mini b.good{color:var(--good);}
-  .mini span{font-size:11px;color:#a9765c;}
+  .mini span{font-size:11px;color:#6b7a96;}
   .startfoot{margin-top:auto;padding-top:14px;position:sticky;bottom:0;z-index:2;
     background:linear-gradient(180deg,rgba(253,241,234,0) 0%,rgba(253,241,234,.92) 18%,var(--bg) 60%);
     padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));}
@@ -368,6 +376,25 @@ var IC = {
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function pad(n){ return String(n).padStart(2,'0'); }
+/** Телефон в едином виде «+7 922 111-22-33» — по нему сразу звонят из карточки. */
+function fmtPhone(s){
+  var d=String(s==null?'':s).replace(/\D/g,'');
+  if(!d) return '';
+  if(d.charAt(0)==='7'||d.charAt(0)==='8') d=d.slice(1);   // это наш собственный «+7» в начале поля
+  while(d.length>10 && (d.charAt(0)==='7'||d.charAt(0)==='8')) d=d.slice(1);   // номер вставили поверх «+7»
+  d=d.slice(0,10);
+  var o='+7';
+  if(d.length) o+=' '+d.slice(0,3);
+  if(d.length>3) o+=' '+d.slice(3,6);
+  if(d.length>6) o+='-'+d.slice(6,8);
+  if(d.length>8) o+='-'+d.slice(8,10);
+  return o;
+}
+function phoneOut(id){ var e=$(id); return e && /\d/.test(e.value) ? fmtPhone(e.value) : ''; }
+function isTel(t){ return t && t.tagName==='INPUT' && t.type==='tel'; }
+document.addEventListener('input', function(e){ if(isTel(e.target)) e.target.value=fmtPhone(e.target.value); });
+document.addEventListener('focus', function(e){ if(isTel(e.target) && !e.target.value) e.target.value='+7 '; }, true);
+document.addEventListener('blur', function(e){ if(isTel(e.target) && e.target.value.replace(/\D/g,'').length<2) e.target.value=''; }, true);
 function today(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function lbl(iso){ return iso.slice(8,10)+'.'+iso.slice(5,7); }
 function rub(n){ return (Number(n)||0).toLocaleString('ru-RU')+' ₽'; }
@@ -402,8 +429,9 @@ function load(silent){
   if (!API){ S=null; render(); return Promise.resolve(); }
   if (loading) return Promise.resolve();
   loading=true; if(!silent) render(); spin(true);
-  return api('getAppData',[!!silent]).then(function(d){
+  return api('getAppData',[!!silent, (silent && S) ? (S.sig||'') : '']).then(function(d){
     loading=false; lastLoad=Date.now();
+    if (d && d.unchanged) return;                            // сервер: «данные те же» — ничего не качаем
     var sig=JSON.stringify(d);
     if (silent && sig===lastSig && S){ S=d; return; }        // ничего не изменилось — не перерисовываем
     lastSig=sig; S=d; cacheSave(d);
@@ -613,7 +641,7 @@ function openAddLead(){
   lbranch=bi; ltrial=null;
   sheet('<h2>Записать новичка</h2><div class="sub">попадёт во вкладку «Записались», не в таблицу</div><div style="height:12px"></div>'+
     '<div class="field"><label for="ln">Имя ребёнка</label><input id="ln" autocomplete="off"></div>'+
-    '<div class="field"><label for="lp">Телефон родителя</label><input id="lp" type="tel" placeholder="+7 …"></div>'+
+    '<div class="field"><label for="lp">Телефон родителя</label><input id="lp" type="tel" inputmode="tel" placeholder="+7 922 111-22-33"></div>'+
     '<div class="field"><label>Филиал</label><div class="tags" id="lbt">'+branches().map(function(n,i){
       return '<button type="button" class="tag'+(i===lbranch?' on':'')+'" onclick="pickLeadBranch('+i+')">'+esc(n)+'</button>';
     }).join('')+'</div></div>'+
@@ -635,7 +663,7 @@ function doAddLead(){
   var name=$('ln').value.trim();
   if(!name){ toast('Укажите имя'); return; }
   $('lgo').disabled=true; pending++;
-  var br=branches()[lbranch], ph=$('lp').value.trim(), note=$('lc').value.trim();
+  var br=branches()[lbranch], ph=phoneOut('lp'), note=$('lc').value.trim();
   send('addLead',[br, name, ph, ltrial, note])
     .then(function(ls){
       if (ls && ls.queued){
@@ -868,8 +896,8 @@ function openKid(id){
     '<div class="hint" style="margin:-2px 0 10px">'+esc(moneyNote(k))+'</div>'+
     '<div class="sec">Посещения · '+esc(S.monthLabel)+'</div>'+cal(k)+
     '<div class="sec">Родители</div>'+phones+
-    '<button class="btn p" onclick="share(\''+id+'\')">Отправить родителю отчёт</button>'+
-    '<div class="two"><button class="btn g" onclick="openPay(\''+id+'\')">Внести оплату</button><button class="btn s" onclick="openEdit(\''+id+'\')">Изменить</button></div>'+
+    '<button class="btn p" onclick="openPay(\''+id+'\')">Внести оплату</button>'+
+    '<div class="two"><button class="btn s" onclick="openEdit(\''+id+'\')">Изменить</button><button class="btn s" onclick="share(\''+id+'\')">Отчёт родителю</button></div>'+
     '<div class="sec">Место в списке</div>'+
     '<div class="moverow"><button onclick="moveKid(\''+id+'\',-1)">↑ Выше</button><button onclick="moveKid(\''+id+'\',1)">↓ Ниже</button></div>'+
     '<div class="hint">Порядок меняется и в таблице. Работает внутри группы'+(sortMode==='visits'?'; сейчас включена сортировка по посещаемости — переключите на «свой порядок», чтобы увидеть результат':'')+'.</div>'+
@@ -963,8 +991,8 @@ function openAdd(){
   sheet('<h2>Новый ребёнок</h2><div class="sub">'+esc(bname())+'</div><div style="height:12px"></div>'+
     '<div class="field"><label for="an">Имя и фамилия</label><input id="an" autocomplete="off"></div>'+
     '<div class="field"><label for="ag">Группа</label>'+groupField('ag', groups(B()).order[0])+'</div>'+
-    '<div class="field"><label for="a1">Телефон родителя</label><input id="a1" type="tel" placeholder="+7 …"></div>'+
-    '<div class="field"><label for="a2">Второй телефон</label><input id="a2" type="tel" placeholder="необязательно"></div>'+
+    '<div class="field"><label for="a1">Телефон родителя</label><input id="a1" type="tel" inputmode="tel" placeholder="+7 922 111-22-33"></div>'+
+    '<div class="field"><label for="a2">Второй телефон</label><input id="a2" type="tel" inputmode="tel" placeholder="необязательно"></div>'+
     '<div class="field"><label>Как платит</label><div class="pick" id="ap"><button class="on" data-t="abon" onclick="setA(\'abon\')">Абонемент</button><button data-t="single" onclick="setA(\'single\')">Разово</button></div></div>'+
     '<button class="btn p" id="ago" onclick="doAdd()">Добавить</button><button class="btn q" onclick="closeSheet()">Отмена</button>', 'add');
 }
@@ -972,7 +1000,7 @@ function setA(t){ atype=t; document.querySelectorAll('#ap button').forEach(funct
 function doAdd(){
   var name=$('an').value.trim(), g=groupVal('ag'), branch=bname();
   if(!name||!g){ toast('Укажите имя и группу'); return; }
-  var p1=$('a1').value.trim(), p2=$('a2').value.trim(), single=atype==='single';
+  var p1=phoneOut('a1'), p2=phoneOut('a2'), single=atype==='single';
   var b0=B();
   b0.kids.push({ id:'tmp-'+Date.now(), name:name, group:g, phone1:p1, phone2:p2,
     payType: single?'РАЗОВОЕ':'АБОНЕМЕНТ', balance:0, price: single?S.config.singlePrice:S.config.abonPrice,
@@ -1005,7 +1033,7 @@ function setE(t){
   $('ep').value = t==='single' ? S.config.singlePrice : S.config.abonPrice;
 }
 function doEdit(id){
-  var f={name:$('en').value.trim(), group:groupVal('eg'), phone1:$('e1').value.trim(), phone2:$('e2').value.trim(), payType:(etype==='single'?'РАЗОВОЕ':'АБОНЕМЕНТ'), price:$('ep').value, balance:$('eb').value}, branch=bname();
+  var f={name:$('en').value.trim(), group:groupVal('eg'), phone1:phoneOut('e1'), phone2:phoneOut('e2'), payType:(etype==='single'?'РАЗОВОЕ':'АБОНЕМЕНТ'), price:$('ep').value, balance:$('eb').value}, branch=bname();
   if(!f.name||!f.group){ toast('Имя и группа обязательны'); return; }
   var k=kid(id);                                        // применяем сразу, не ждём сервер
   if(k){ k.name=f.name; k.group=f.group; k.phone1=f.phone1; k.phone2=f.phone2; k.payType=f.payType;
