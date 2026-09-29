@@ -64,6 +64,10 @@
   .sortbar button{flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:13px;font-weight:650;cursor:pointer;}
   .sortbar button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
   .pill.miss{background:var(--bad-soft);color:var(--bad);}
+  .pill.zero{background:var(--card-hi);color:var(--muted);}
+  .pill.grp{background:transparent;color:var(--faint);padding-left:0;}
+  .grp.away .pill{font-size:11px;padding:2px 7px;}
+  .grp.away .nm{font-size:15.5px;}
   .grp.away .gh span:first-child{color:var(--bad);}
   .moverow{display:flex;gap:8px;margin:10px 0 2px;}
   .moverow button{flex:1;padding:11px;border-radius:11px;border:1px solid var(--border);background:var(--card);font-weight:650;font-size:14px;cursor:pointer;}
@@ -316,6 +320,7 @@ function pad(n){ return String(n).padStart(2,'0'); }
 function today(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function lbl(iso){ return iso.slice(8,10)+'.'+iso.slice(5,7); }
 function rub(n){ return (Number(n)||0).toLocaleString('ru-RU')+' ₽'; }
+function money(n){ return n<0?'debt':(n>0?'ok':'zero'); }
 function srub(n){ return (n>0?'+':'')+rub(n); }
 function plural(n,a,b,c){ var m=n%10,h=n%100; return m===1&&h!==11?a:(m>=2&&m<=4&&(h<12||h>14)?b:c); }
 function toast(t){ var o=document.querySelector('.toast'); if(o) o.remove(); var e=document.createElement('div'); e.className='toast'; e.textContent=t; document.body.appendChild(e); setTimeout(function(){e.remove();},2800); }
@@ -447,7 +452,7 @@ function kidCard(k, s){
   if (k.pendingNew) return '<div class="card" data-n="'+esc(k.name.toLowerCase())+'"><div class="main"><div class="nm">'+esc(k.name)+'</div>'+
     '<div class="meta"><span class="pill miss">ждёт отправки в таблицу</span></div></div></div>';
   return '<div class="card" data-n="'+esc(k.name.toLowerCase())+'"><div class="main" onclick="openKid(\''+k.id+'\')"><div class="nm">'+esc(k.name)+'</div>'+
-    '<div class="meta"><span class="pill v">'+k.visits+' зан.</span><span class="pill '+(k.remainder<0?'debt':'ok')+'">'+srub(k.remainder)+'</span>'+
+    '<div class="meta"><span class="pill v">'+k.visits+' зан.</span><span class="pill '+money(k.remainder)+'">'+srub(k.remainder)+'</span>'+
     (away(k)?'<span class="pill miss">'+k.missed+' '+plural(k.missed,'пропуск','пропуска','пропусков')+' подряд</span>':'')+'</div></div>'+
     '<button class="mark'+(on?' on':'')+'" onclick="toggle(\''+k.id+'\',\''+s+'\')" aria-label="'+(on?'Снять отметку':'Отметить')+'">'+IC.check+'</button></div>';
 }
@@ -455,8 +460,17 @@ function list(b){
   if (!b.kids.length) return '<div class="empty"><h3>Пока нет детей</h3>Нажмите «+», чтобы добавить.</div>';
   var s=curIso();
   var act=b.kids.filter(function(k){ return !away(k); }), gone=b.kids.filter(away);
+  var debts=b.kids.filter(function(k){ return k.remainder<0; });
   var h='<div class="sortbar"><button class="'+(sortMode==='sheet'?'on':'')+'" onclick="setSort(\'sheet\')">Свой порядок</button>'+
-        '<button class="'+(sortMode==='visits'?'on':'')+'" onclick="setSort(\'visits\')">По посещаемости</button></div>';
+        '<button class="'+(sortMode==='visits'?'on':'')+'" onclick="setSort(\'visits\')">Посещаемость</button>'+
+        '<button class="'+(sortMode==='debt'?'on':'')+'" onclick="setSort(\'debt\')">Долги'+(debts.length?' <b>'+debts.length+'</b>':'')+'</button></div>';
+  if (sortMode==='debt'){
+    if (!debts.length) return h+'<div class="empty"><h3>Долгов нет</h3>У всех детей баланс в плюсе или в нуле.</div>';
+    var dk=debts.slice().sort(function(x,y){ return x.remainder-y.remainder; });
+    var total=dk.reduce(function(a,k){ return a+k.remainder; },0);
+    return h+'<div class="grp"><div class="gh"><span>Должники</span><span>'+rub(-total)+'</span></div>'+
+      dk.map(function(k){ return kidCard(k,s); }).join('')+'</div>';
+  }
   var g=groups({kids:act});
   h+=g.order.map(function(name){
     var kk=sortKids(g.map[name]);
@@ -470,9 +484,10 @@ function list(b){
       '<div class="hint" style="padding:0 2px 8px">Пропустили '+AWAY+' тренировки подряд и больше — это примерно две недели.</div>'+
       gk.map(function(k){
         return '<div class="card" data-n="'+esc(k.name.toLowerCase())+'"><div class="main" onclick="openKid(\''+k.id+'\')"><div class="nm">'+esc(k.name)+'</div>'+
-          '<div class="meta"><span class="pill miss">'+k.missed+' '+plural(k.missed,'пропуск','пропуска','пропусков')+' подряд</span>'+
-          '<span class="pill v">'+(k.lastVisit?('был '+lbl(k.lastVisit)):'не был в этом месяце')+'</span>'+
-          '<span class="pill '+(k.remainder<0?'debt':'ok')+'">'+srub(k.remainder)+'</span></div></div>'+
+          '<div class="meta"><span class="pill miss">'+k.missed+' подряд</span>'+
+          '<span class="pill v">'+(k.lastVisit?('был '+lbl(k.lastVisit)):'не был')+'</span>'+
+          '<span class="pill '+money(k.remainder)+'">'+srub(k.remainder)+'</span>'+
+          '<span class="pill grp">'+esc(k.group)+'</span></div></div>'+
           '<button class="mark'+(k.attendance[s]?' on':'')+'" onclick="toggle(\''+k.id+'\',\''+s+'\')" aria-label="Отметить">'+IC.check+'</button></div>';
       }).join('')+'</div>';
   }
