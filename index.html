@@ -278,7 +278,8 @@
 <script>
 // ======== сервер ========
 var API = null;
-try { API = localStorage.getItem('bk72_apiUrl'); } catch (e) {}
+var KEY = '';
+try { API = localStorage.getItem('bk72_apiUrl'); KEY = localStorage.getItem('bk72_key') || ''; } catch (e) {}
 var QUEUEABLE = { setAttendance:1, addPayment:1, updateChild:1, addLead:1, addChild:1, moveChild:1, deleteLead:1 };   // что можно отложить до интернета
 function netErr(e){
   var m = String(e && e.message || e);
@@ -288,7 +289,7 @@ function api(action, params, timeout){
   if (!API) return Promise.reject(new Error('Сервер не подключён — откройте Настройки'));
   var ctl = window.AbortController ? new AbortController() : null;
   if (ctl) setTimeout(function(){ ctl.abort(); }, timeout || 25000);     // чтобы запрос не висел вечно
-  return fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, signal: ctl?ctl.signal:undefined, body:JSON.stringify({action:action, params:params||[]}) })
+  return fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, signal: ctl?ctl.signal:undefined, body:JSON.stringify({action:action, params:params||[], key:KEY}) })
     .then(function(r){
       if (r.status===404) throw new Error('По этому адресу ничего нет (404). В Apps Script: Развернуть → Управление развертываниями → возьмите АКТИВНОЕ развертывание и скопируйте «URL веб-приложения», он заканчивается на /exec.');
       if (r.status===401 || r.status===403) throw new Error('Google не пускает (доступ). При публикации выберите «Запуск от имени: Я» и «Доступ: Все».');
@@ -298,6 +299,7 @@ function api(action, params, timeout){
     .then(function(d){
       if (d.ok) return d.result;
       var e = d.error || 'Ошибка сервера';
+      if (d.needKey) { needKey = true; }
       if (/Неизвестное действие/i.test(e)) e = 'Таблица отвечает старым кодом. В Apps Script: Развернуть → Управление развертываниями → карандаш → Версия: Новая версия → Развернуть.';
       throw new Error(e);
     });
@@ -326,6 +328,7 @@ function flush(){
       sent++; var rest=queueGet(); rest.shift(); queueSet(rest); return step();
     }).catch(function(e){
       if (netErr(e)) return;                               // связи всё ещё нет — ждём
+      if (needKey){ toast(e.message); return; }            // не потеряем отметки: дождёмся ключа
       var rest=queueGet(); rest.shift(); queueSet(rest);   // сервер отказал — не крутим вечно
       toast('Не удалось отправить: '+e.message);
       return step();
@@ -346,6 +349,7 @@ function send(action, params){
 window.addEventListener('online', function(){ flush(); });
 
 // ======== состояние ========
+var needKey = false;
 var S = null, screen = 'main', bi = 0, sel = {}, q = '', loading = false, pending = 0, lastLoad = 0, sheetKey = null, lastSig = '';
 var session = null;      // {branch, iso} — подтверждено на стартовом экране
 var pick = { bi: 0, iso: null }, startFresh = true;
@@ -409,6 +413,7 @@ function load(silent){
   }).catch(function(e){
     loading=false; spin(false);
     if (netErr(e) && S){ render(); return; }                     // офлайн — работаем на кеше
+    if (needKey){ screen='settings'; render(); toast(e.message); return; }   // сервер просит ключ — сразу в настройки
     if(!silent){ render(); }
     toast(e.message);
   });
@@ -420,8 +425,6 @@ function route(){
   if (session) return false;
   var tr = trainsToday();
   if (tr.length) { openStart(tr[0]); return true; }                  // сегодня тренировка — стартовый экран
-  session = { branch: bname(), iso: null, day: today(), skipped: true };
-  return false;
   session = { branch: bname(), iso: null, day: today(), skipped: true };
   return false;
 }
@@ -1043,6 +1046,9 @@ function renderSettings(){
   var h='<div class="top"><div class="row"><button class="ib" onclick="closeSettings()" aria-label="Назад">'+IC.back+'</button><div class="title">Настройки</div></div></div><div class="content">';
   h+='<div class="panel"><h3>1. Сервер <span class="st '+(API?'ok':'no')+'">'+(API?'указан':'не указан')+'</span></h3><p>Адрес из Apps Script (Deploy → Web app), заканчивается на /exec.</p>'+
     '<div class="field"><input id="sa" type="url" placeholder="https://script.google.com/macros/s/…/exec" value="'+esc(API||'')+'"></div>'+
+    '<div class="field"><label for="sk">Ключ доступа '+(needKey?'<b style="color:var(--bad)">— нужен!</b>':'')+'</label><input id="sk" placeholder="из таблицы, лист «Настройки»" value="'+esc(KEY||'')+'"><div class="hint">'+(needKey
+      ? 'Откройте таблицу → лист «Настройки» → строка «Ключ доступа», скопируйте значение сюда и нажмите «Сохранить». Вводится один раз.'
+      : 'Ключ защищает список детей и телефоны: без него по ссылке сервера отдаётся только форма записи. Он в таблице, лист «Настройки», строка «Ключ доступа».')+'</div></div>'+
     '<button class="btn s" onclick="saveApi()">Сохранить</button>'+
     '<button class="btn q" onclick="testApi()">Проверить связь</button>'+
     '<div class="hint" id="apitest"></div></div>';
@@ -1109,12 +1115,14 @@ function testApi(){
     .catch(function(err){ if(e) e.innerHTML='<b style="color:var(--bad)">Не достучался:</b> '+esc(err.message)+'. Проверьте интернет и адрес.'; });
 }
 function saveApi(){
+  try{ KEY=($('sk')?$('sk').value.trim():KEY); localStorage.setItem('bk72_key', KEY); }catch(e){}
+  needKey=false;
   var u=$('sa').value.trim().replace(/\/$/,'');
   if(!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(u)){ toast('Нужна ссылка вида https://script.google.com/macros/s/…/exec'); return; }
   API=u; try{localStorage.setItem('bk72_apiUrl',u);}catch(e){}
   toast('Проверяем…');
-  api('getAppData').then(function(d){ S=d; lastLoad=Date.now(); sel={}; renderSettings(); toast('Готово: '+d.ssName); })
-    .catch(function(e){ toast('Сервер не отвечает: '+e.message); });
+  api('getAppData').then(function(d){ S=d; lastLoad=Date.now(); sel={}; cacheSave(d); renderSettings(); toast('Готово: '+d.ssName); flush(); })
+    .catch(function(e){ renderSettings(); toast('Сервер не отвечает: '+e.message); });
 }
 function newMonth(){
   if(!confirm('Создать таблицу на следующий месяц и переключить приложение на неё?')) return;
