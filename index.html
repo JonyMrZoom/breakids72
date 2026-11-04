@@ -62,6 +62,12 @@
   .summary .tag.off{background:var(--bad-soft);color:var(--bad);}
   .summary .tag.f{background:var(--accent-soft);color:var(--accent);}
   .mark.future{opacity:.35;}
+  .mark,.cal .d,.chip,.tag,.btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  .mark.on.armed{background:var(--bad-soft);border-color:var(--bad);animation:armpulse .6s ease-in-out infinite alternate;}
+  .mark.on.armed svg{stroke:var(--bad);}
+  .cal .d.att.armed{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);animation:armpulse .6s ease-in-out infinite alternate;}
+  @keyframes armpulse{from{box-shadow:0 0 0 0 rgba(255,107,107,.0);}to{box-shadow:0 0 0 4px rgba(255,107,107,.35);}}
+  .banner button.alt{margin-left:0;background:transparent;color:var(--accent);border:1px solid var(--accent);}
   .dbtn.dis{opacity:.45;cursor:default;}
   .cal .d.later{color:var(--faint);}
   .sortbar{display:flex;gap:8px;margin:0 2px 12px;}
@@ -279,6 +285,82 @@
   .banner b{font-weight:750;}
   .banner button{margin-left:auto;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-weight:700;font-size:14px;cursor:pointer;}
   .toast{pointer-events:none;position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:#151a22;color:#fff;padding:11px 18px;border-radius:30px;font-size:13.5px;font-weight:650;box-shadow:0 10px 30px rgba(16,24,40,.25);max-width:calc(100% - 32px);text-align:center;}
+
+  /* CREW usability refresh — compact, calm and touch-first */
+  :root{
+    --bg:#f5f6f8; --bg2:#fff; --card:#fff; --card-hi:#f0f2f5;
+    --text:#17191d; --muted:#68707c; --faint:#9299a4;
+    --accent:#f15b38; --accent-soft:#fff0eb;
+    --good:#15965b; --good-soft:#e8f6ee;
+    --bad:#cf3e36; --bad-soft:#fff0ef;
+    --border:#e7e9ed; --shadow:0 1px 2px rgba(18,24,32,.035),0 3px 10px rgba(18,24,32,.025);
+  }
+  body{background:var(--bg);letter-spacing:-.08px;}
+  .top{position:sticky;top:0;z-index:15;padding:calc(9px + env(safe-area-inset-top,0px)) 16px 10px;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 1px 0 rgba(20,25,32,.04);}
+  .logo{border:0;border-radius:10px;}
+  .title{font-size:18px;letter-spacing:.025em;}
+  .sub{margin-top:2px;font-size:12px;}
+  .ib{width:42px;height:42px;border-radius:13px;box-shadow:none;background:#f7f8fa;border-color:#eef0f3;}
+  .tabs{gap:7px;margin-top:11px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px;}
+  .tab{flex:0 0 auto;min-width:92px;padding:10px 13px;border-radius:12px;background:#f6f7f9;border-color:transparent;font-size:13px;white-space:nowrap;}
+  .tab.on{background:#202329;border-color:#202329;color:#fff;}
+  .tab .cnt{background:var(--accent);}
+  .tab.on .cnt{background:#fff;color:#202329;}
+  .content{padding:14px 16px calc(112px + env(safe-area-inset-bottom,0px));}
+  .strip{gap:8px;padding:3px 16px 7px;}
+  .chip{width:58px;padding:9px 0 8px;border-radius:14px;box-shadow:none;background:#fff;border-color:#eceef1;}
+  .chip .dw{font-size:10px;letter-spacing:.25px;}
+  .chip .dd{font-size:18px;line-height:1.2;margin:2px 0;}
+  .chip .ct{font-size:10px;}
+  .chip.sel{background:var(--accent);border-color:var(--accent);box-shadow:0 5px 12px rgba(241,91,56,.18);}
+  .summary{gap:8px;flex-wrap:wrap;margin:12px 2px 13px;font-size:12.5px;line-height:1.5;}
+  .summary>span:last-child{margin-left:auto;white-space:nowrap;}
+  .summary b{font-size:16px;}
+  .search{margin:0 0 12px;padding:13px 14px;border-radius:13px;background:#fff;border-color:#e8eaee;box-shadow:none;}
+  .search::placeholder{color:#9aa1ac;}
+  .sortbar{gap:6px;margin:0 0 14px;padding:4px;background:#eceef1;border-radius:13px;}
+  .sortbar button{padding:10px 7px;border:0;border-radius:10px;background:transparent;font-size:12.5px;}
+  .sortbar button.on{background:#fff;color:#202329;box-shadow:0 1px 3px rgba(20,24,30,.09);}
+  .gh{padding:5px 3px 8px;font-size:11px;letter-spacing:.7px;color:#858d98;}
+  .card{min-height:76px;padding:11px 11px 11px 14px;margin-bottom:7px;gap:12px;border-radius:15px;border-color:#eceef1;box-shadow:0 1px 3px rgba(20,24,30,.035);}
+  .card .nm{font-size:15.5px;font-weight:720;letter-spacing:-.2px;}
+  .meta{gap:6px;margin-top:6px;}
+  .pill{padding:4px 8px;font-size:11px;font-weight:680;}
+  .pill.v{background:#fff1ec;color:#d95432;}
+  .mark{width:52px;height:52px;border-radius:15px;border:1px solid #e8eaee;background:#f8f9fa;transition:transform .12s ease,background .12s ease;}
+  .mark:active{transform:scale(.94);}
+  .mark.on{background:var(--good);border-color:var(--good);}
+  .grp{margin-bottom:13px;}
+  .grp .gh{padding-top:7px;}
+  .fab{right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:19px;box-shadow:0 8px 20px rgba(241,91,56,.25);}
+  .banner{border-radius:14px;}
+  .empty{padding:42px 18px;}
+  .sheet{padding-left:20px;padding-right:20px;border-radius:22px 22px 0 0;box-shadow:0 -12px 40px rgba(20,24,30,.12);}
+  .handle{background:#d6d9df;}
+  .sheet h2{font-size:20px;letter-spacing:-.35px;}
+  .field label{font-size:12px;margin-bottom:6px;}
+  .field input,.field select{min-height:48px;border-radius:13px;border-color:#e5e8ed;}
+  .btn{min-height:48px;border-radius:13px;}
+  .btn.p{box-shadow:none;}
+  .pick button,.tags .tag{border-radius:12px;}
+  .stat{border-radius:13px;background:#f7f8fa;}
+  button{touch-action:manipulation;}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid rgba(241,91,56,.24);outline-offset:2px;}
+  @media(min-width:700px){
+    .top{padding-left:24px;padding-right:24px;}
+    .content{padding-top:18px;}
+    .grp{gap:9px;}
+    .card{min-height:78px;}
+  }
+  @media(max-width:390px){
+    .content{padding-left:12px;padding-right:12px;}
+    .strip{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px;}
+    .card{padding-left:11px;gap:9px;}
+    .mark{width:48px;height:48px;border-radius:14px;}
+    .pill{font-size:10.5px;padding:3px 7px;}
+    .sortbar button{font-size:11.5px;}
+  }
+  @media(prefers-reduced-motion:reduce){.mark,.chip,.tab{transition:none!important;}}
 </style>
 </head>
 <body>
@@ -289,77 +371,226 @@ var API = null;
 var KEY = '';
 try { API = localStorage.getItem('bk72_apiUrl'); KEY = localStorage.getItem('bk72_key') || ''; } catch (e) {}
 var QUEUEABLE = { setAttendance:1, addPayment:1, updateChild:1, addLead:1, addChild:1, moveChild:1, deleteLead:1, convertLead:1 };   // что можно отложить до интернета
+var netDown = false;        // последний запрос не дошёл: считаем, что связи нет, и больше не ждём таймаутов
+var retryDelay = 8000;      // пауза между попытками восстановить связь (растёт до минуты)
+var epoch = 0;              // растёт при любом локальном изменении: устаревший ответ сервера не затрёт экран
+
+function mkErr(msg, flag){ var e = new Error(msg); if (flag) e[flag] = true; return e; }
+/** Ошибка «связи нет / сервер временно не отвечает» — такое можно повторить позже, данные не теряем. */
 function netErr(e){
+  if (e && (e.net || e.transient)) return true;
+  if (e && e.http) return false;
   var m = String(e && e.message || e);
   return !navigator.onLine || /Failed to fetch|NetworkError|aborted|The operation|Load failed|timed out/i.test(m);
 }
-function api(action, params, timeout){
-  if (!API) return Promise.reject(new Error('Сервер не подключён — откройте Настройки'));
-  if (!navigator.onLine) return Promise.reject(new Error('Нет интернета (offline)'));   // без сети не ждём таймаут
-  var ctl = window.AbortController ? new AbortController() : null;
-  if (ctl) setTimeout(function(){ ctl.abort(); }, timeout || 25000);     // чтобы запрос не висел вечно
+function isOnline(){ return navigator.onLine && !netDown; }
+function setDown(v){
+  if (netDown === v) return;
+  netDown = v;
+  if (screen === 'main' && !loading) render();             // обновить значок «офлайн»
+}
+function api(action, params, timeout, force){
+  if (!API) return Promise.reject(mkErr('Сервер не подключён — откройте Настройки'));
+  if (!navigator.onLine) return Promise.reject(mkErr('Нет интернета (offline)', 'net'));          // без сети не ждём таймаут
+  if (netDown && !force) return Promise.reject(mkErr('Нет связи с сервером', 'net'));              // связь только что пропала — не зависаем
+  var ctl = window.AbortController ? new AbortController() : null, timer = null;
+  if (ctl) timer = setTimeout(function(){ ctl.abort(); }, timeout || 25000);   // чтобы запрос не висел вечно
   return fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, signal: ctl?ctl.signal:undefined, body:JSON.stringify({action:action, params:params||[], key:KEY}) })
     .then(function(r){
-      if (r.status===404) throw new Error('По этому адресу ничего нет (404). В Apps Script: Развернуть → Управление развертываниями → возьмите АКТИВНОЕ развертывание и скопируйте «URL веб-приложения», он заканчивается на /exec.');
-      if (r.status===401 || r.status===403) throw new Error('Google не пускает (доступ). При публикации выберите «Запуск от имени: Я» и «Доступ: Все».');
-      if (!r.ok) throw new Error('Сервер ответил ' + r.status);
-      return r.json();
+      setDown(false);                                       // сервер ответил — связь есть
+      if (r.status===404) throw mkErr('По этому адресу ничего нет (404). В Apps Script: Развернуть → Управление развертываниями → возьмите АКТИВНОЕ развертывание и скопируйте «URL веб-приложения», он заканчивается на /exec.', 'http');
+      if (r.status===401 || r.status===403) throw mkErr('Google не пускает (доступ). При публикации выберите «Запуск от имени: Я» и «Доступ: Все».', 'http');
+      if (r.status>=500 || r.status===429) throw mkErr('Сервер Google временно не отвечает ('+r.status+')', 'transient');
+      if (!r.ok) throw mkErr('Сервер ответил ' + r.status, 'http');
+      return r.text().then(function(t){
+        var d; try { d = JSON.parse(t); } catch (x) { throw mkErr('Сервер вернул не тот ответ — похоже на временный сбой Google', 'transient'); }
+        if (d && d.ok) return d.result;
+        var e = (d && d.error) || 'Ошибка сервера';
+        if (d && d.needKey) { needKey = true; }
+        if (/Неизвестное действие/i.test(e)) e = 'Таблица отвечает старым кодом. В Apps Script: Развернуть → Управление развертываниями → карандаш → Версия: Новая версия → Развернуть.';
+        throw mkErr(e, 'http');
+      });
     })
-    .then(function(d){
-      if (d.ok) return d.result;
-      var e = d.error || 'Ошибка сервера';
-      if (d.needKey) { needKey = true; }
-      if (/Неизвестное действие/i.test(e)) e = 'Таблица отвечает старым кодом. В Apps Script: Развернуть → Управление развертываниями → карандаш → Версия: Новая версия → Развернуть.';
-      throw new Error(e);
+    .then(function(v){ clearTimeout(timer); return v; }, function(e){
+      clearTimeout(timer);
+      if (e && (e.http || e.transient)) throw e;
+      setDown(true);                                        // запрос не дошёл или не вернулся
+      throw mkErr((e && e.name==='AbortError') ? 'Сервер не ответил вовремя (timed out)' : String(e && e.message || e), 'net');
     });
 }
 
 // ======== офлайн: кеш данных и очередь отправки ========
-function cacheSave(d){ try{ localStorage.setItem('bk72_data', JSON.stringify({t:Date.now(), d:d})); }catch(e){} }
+var cacheTimer = null, cacheRef = null;
+/** Запись кеша откладывается: на каждом тапе гонять весь JSON в localStorage — это и есть «подлагивание». */
+function cacheSave(d){ cacheRef = d; if (!cacheTimer) cacheTimer = setTimeout(cacheNow, 700); }
+function cacheNow(){
+  if (cacheTimer){ clearTimeout(cacheTimer); cacheTimer = null; }
+  if (!cacheRef) return;
+  try{ localStorage.setItem('bk72_data', JSON.stringify({t:Date.now(), d:cacheRef})); }catch(e){}
+}
+window.addEventListener('pagehide', cacheNow);
+document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='hidden') cacheNow(); });
 function cacheLoad(){ try{ var v=JSON.parse(localStorage.getItem('bk72_data')||'null'); return v&&v.d?v:null; }catch(e){ return null; } }
-function queueGet(){ try{ return JSON.parse(localStorage.getItem('bk72_queue')||'[]'); }catch(e){ return []; } }
+function queueGet(){ try{ var a=JSON.parse(localStorage.getItem('bk72_queue')||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
 function queueSet(a){ try{ localStorage.setItem('bk72_queue', JSON.stringify(a)); }catch(e){} }
-function queueAdd(action, params){ var a=queueGet(); a.push({action:action, params:params, t:Date.now()}); queueSet(a); }
+/** В очередь; повторная отметка того же ребёнка в тот же день заменяет прежнюю (уходит только последнее решение). */
+function queueAdd(action, params){
+  var a=queueGet(), from=flushing?1:0;                      // первую запись при отправке не трогаем
+  if (action==='setAttendance'){
+    for (var i=a.length-1;i>=from;i--){
+      var p=a[i].params;
+      if (a[i].action===action && p[0]===params[0] && p[1]===params[1] && p[2]===params[2]){ a[i].params=params; queueSet(a); return; }
+    }
+  }
+  a.push({action:action, params:params, t:Date.now()}); queueSet(a);
+}
 function queueCount(){ return queueGet().length; }
-/** Отправляет отложенное по очереди; вызывается при появлении связи. */
-var flushing=false;
+function failedGet(){ try{ var a=JSON.parse(localStorage.getItem('bk72_failed')||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function failedAdd(it, msg){
+  if (!it) return;
+  var a=failedGet(); a.push({action:it.action, params:it.params, t:it.t||Date.now(), msg:String(msg||'')});
+  try{ localStorage.setItem('bk72_failed', JSON.stringify(a.slice(-30))); }catch(e){}
+}
+
+var flushing=false, flushTimer=null;
+/** Назначить попытку восстановить связь / отправить накопленное. */
+function kick(delay){
+  if (flushTimer || !API) return;
+  flushTimer=setTimeout(function(){ flushTimer=null; recover(); }, delay||0);
+}
+function recover(){
+  if (!API) return Promise.resolve();
+  if (queueCount()) return flush();
+  if (netDown && navigator.onLine){                          // лёгкая проверка: появилась ли связь
+    return api('getAppData',[true,(S&&S.sig)||''],10000,true).then(function(){ retryDelay=8000; return load(true); },
+      function(e){ if (netErr(e)){ retryDelay=Math.min(retryDelay*2,60000); kick(retryDelay); } });
+  }
+  return Promise.resolve();
+}
+/** Отправляет отложенное строго по порядку; вызывается при появлении связи. */
 function flush(){
   if (flushing || !API || !navigator.onLine) return Promise.resolve(0);
-  var a=queueGet();
-  if (!a.length) return Promise.resolve(0);
+  if (!queueCount()) return Promise.resolve(0);
   flushing=true;
-  var sent=0;
+  var sent=0, retry=false;
   var step=function(){
     var list=queueGet();
     if (!list.length) return Promise.resolve();
     var it=list[0];
-    return api(it.action, it.params, 20000).then(function(){
-      sent++; var rest=queueGet(); rest.shift(); queueSet(rest); return step();
-    }).catch(function(e){
-      if (netErr(e)) return;                               // связи всё ещё нет — ждём
-      if (needKey){ toast(e.message); return; }            // не потеряем отметки: дождёмся ключа
-      var rest=queueGet(); rest.shift(); queueSet(rest);   // сервер отказал — не крутим вечно
+    return api(it.action, it.params, 20000, true).then(function(){
+      sent++; retryDelay=8000;
+      var rest=queueGet(); rest.shift(); queueSet(rest); return step();
+    }, function(e){
+      if (needKey){ toast(e.message); return; }              // не потеряем отметки: дождёмся ключа
+      if (netErr(e)){                                        // связи нет или Google барахлит — оставляем в очереди
+        if (e.transient){
+          var r2=queueGet();
+          if (r2[0]){
+            r2[0].tries=(r2[0].tries||0)+1;
+            if (r2[0].tries>=6){ failedAdd(r2.shift(), e.message); queueSet(r2); toast('Не удалось отправить: '+e.message); return step(); }
+            queueSet(r2);
+          }
+        }
+        retry=true; return;
+      }
+      var rest=queueGet(), bad=rest.shift(); queueSet(rest); failedAdd(bad, e.message);   // сервер отказал — не крутим вечно, но и не теряем бесследно
       toast('Не удалось отправить: '+e.message);
       return step();
     });
   };
   return step().then(function(){
     flushing=false;
-    if (sent){ toast('Отправлено в таблицу: '+sent); return load(true); }
-  }).catch(function(){ flushing=false; });
+    if (retry){ retryDelay=Math.min(retryDelay*2,60000); kick(retryDelay); }
+    if (sent) toast('Отправлено в таблицу: '+sent);
+    if (screen==='main') render();
+    if (sent && !retry && !queueCount()) return load(true);
+  }, function(){ flushing=false; });
 }
-/** Отправка изменения: офлайн — в очередь, онлайн — сразу. */
+var sendChain = Promise.resolve();
+/** Отправка изменения. Все записи идут строго по очереди: офлайн — в очередь, онлайн — сразу,
+ *  а если очередь не пуста, новая запись встаёт за ней (иначе отметка «снять» может обогнать «поставить»). */
 function send(action, params){
-  return api(action, params).catch(function(e){
-    if (QUEUEABLE[action] && netErr(e)){ queueAdd(action, params); render(); return { queued:true }; }
-    throw e;
-  });
+  if (!QUEUEABLE[action]) return api(action, params);
+  var enqueue=function(){ queueAdd(action, params); kick(netDown ? retryDelay : 0); render(); return { queued:true }; };
+  var run=function(){
+    if (!API) return Promise.reject(mkErr('Сервер не подключён — откройте Настройки'));
+    if (queueCount() || !isOnline()) return enqueue();
+    return api(action, params, action==='setAttendance' ? 12000 : 25000).catch(function(e){
+      if (netErr(e) && !needKey) return enqueue();
+      throw e;
+    });
+  };
+  var p = sendChain.then(run);
+  sendChain = p.catch(function(){});
+  return p;
 }
-window.addEventListener('online', function(){ flush(); });
+window.addEventListener('online', function(){ netDown=false; if (queueCount()) flush(); else load(true); });
+window.addEventListener('offline', function(){ if (screen==='main') render(); });
+
+/** Применяет к свежим данным то, что ещё не ушло в таблицу, — чтобы отметки не «пропадали» после обновления. */
+function applyQueue(d, only){
+  if (!d || !d.branches) return d;
+  queueGet().forEach(function(it){
+    try{
+      var p=it.params, b=d.branches[p[0]]; if (!b || !b.kids || (only && p[0]!==only)) return;
+      var k=null;
+      if (it.action!=='addChild') for (var i=0;i<b.kids.length;i++) if (b.kids[i].id===p[1]){ k=b.kids[i]; break; }
+      if (it.action==='setAttendance' && k){
+        var had=!!k.attendance[p[2]];
+        if (p[3] && !had){ k.attendance[p[2]]=true; k.visits++; } else if (!p[3] && had){ delete k.attendance[p[2]]; k.visits--; }
+        k.remainder=k.balance-k.visits*k.price;
+      } else if (it.action==='addPayment' && k && d.config){
+        var single=p[2]==='single';
+        k.balance+= single ? d.config.singlePrice : (Math.max(1,Number(p[3])||1)*d.config.abonPrice);
+        k.price= single ? d.config.singlePrice : d.config.abonPrice; k.payType= single?'РАЗОВОЕ':'АБОНЕМЕНТ';
+        k.remainder=k.balance-k.visits*k.price;
+      } else if (it.action==='updateChild' && k && p[2]){
+        var f=p[2]; k.name=f.name||k.name; k.group=f.group||k.group; k.phone1=f.phone1; k.phone2=f.phone2; k.payType=f.payType||k.payType;
+        k.price=Number(f.price)||k.price; k.balance=Number(f.balance)||0; k.remainder=k.balance-k.visits*k.price;
+      } else if (it.action==='addChild' && d.config){
+        var sg=p[5]==='single';
+        b.kids.push({ id:'tmp-q'+it.t, name:p[1], group:p[2], phone1:p[3]||'', phone2:p[4]||'', payType: sg?'РАЗОВОЕ':'АБОНЕМЕНТ', balance:0,
+          price: sg?d.config.singlePrice:d.config.abonPrice, remainder:0, visits:0, attendance:{}, missed:0, lastVisit:'', pendingNew:true });
+      }
+    }catch(e){}
+  });
+  return d;
+}
+/** Данные с сервера в нормальный вид: пустые поля, повторы и порядок дат — чтобы экран не падал от одной кривой строки. */
+function normalize(d){
+  if (!d || !d.branches) return d;
+  Object.keys(d.branches).forEach(function(n){
+    var b=d.branches[n]; if (!b || b.error) return;
+    b.kids = Array.isArray(b.kids) ? b.kids : [];
+    var seen={}, ds=[]; (Array.isArray(b.dates)?b.dates:[]).forEach(function(x){ if (x && x.iso && !seen[x.iso]){ seen[x.iso]=1; ds.push(x); } });
+    ds.sort(function(x,y){ return x.iso<y.iso?-1:(x.iso>y.iso?1:0); }); b.dates=ds;
+    b.kids.forEach(function(k){
+      k.attendance = k.attendance || {};
+      ['visits','balance','price','remainder','missed'].forEach(function(f){ k[f]=Number(k[f])||0; });
+      k.name=String(k.name==null?'':k.name); k.group=String(k.group==null?'':k.group);
+      k.phone1=k.phone1||''; k.phone2=k.phone2||''; k.payType=k.payType||'АБОНЕМЕНТ';
+    });
+  });
+  return d;
+}
+/** Принять данные с сервера как текущие. */
+function adopt(d){
+  if (d && d.configured && (!d.branches || !d.config || !d.month)) throw mkErr('Сервер вернул неполные данные — попробуйте обновить', 'transient');
+  normalize(d); applyQueue(d);
+  epoch++; S=d; cacheSave(d);
+  return d;
+}
+/** Подставить свежие данные одного филиала (ответ на запись), не теряя того, что ещё в очереди. */
+function putBranch(name, b){
+  var t={branches:{}, config:S.config}; t.branches[name]=b; normalize(t);
+  S.branches[name]=t.branches[name]; applyQueue(S, name);
+}
+function begin(){ pending++; epoch++; }
+function end(){ pending=Math.max(0,pending-1); }
 
 // ======== состояние ========
 var needKey = false;
-var S = null, screen = 'main', bi = 0, sel = {}, q = '', loading = false, pending = 0, lastLoad = 0, sheetKey = null, lastSig = '';
+var S = null, screen = 'main', bi = 0, sel = {}, q = '', loading = false, pending = 0, lastLoad = 0, sheetKey = null, lastSig = '', updateReady = false;
 var session = null;      // {branch, iso} — подтверждено на стартовом экране
 var pick = { bi: 0, iso: null }, startFresh = true;
 try { bi = Number(localStorage.getItem('bk72_branch')) || 0; } catch (e) {}
@@ -429,20 +660,22 @@ function curIso(){
 function load(silent){
   if (!API){ S=null; render(); return Promise.resolve(); }
   if (loading) return Promise.resolve();
-  if (silent && queueCount() && navigator.onLine) return flush();   // сначала отправим то, что накопилось офлайн
-  loading=true; if(!silent) render(); spin(true);
-  return api('getAppData',[!!silent, (silent && S) ? (S.sig||'') : '']).then(function(d){
+  if (silent && queueCount() && isOnline()) return flush();   // сначала отправим то, что накопилось офлайн
+  if (silent && !isOnline()){ kick(0); return Promise.resolve(); }   // связи нет — не дёргаем сеть и не перерисовываем зря
+  loading=true; var ep=epoch; if(!silent) render();
+  return api('getAppData',[!!silent, (silent && S) ? (S.sig||'') : ''], silent ? 15000 : 25000).then(function(d){
     loading=false; lastLoad=Date.now();
     if (d && d.unchanged) return;                            // сервер: «данные те же» — ничего не качаем
+    if (S && (ep!==epoch || pending)) return;                // пока шёл запрос, на экране что-то изменилось — старый ответ не затираем
     var sig=JSON.stringify(d);
-    if (silent && sig===lastSig && S){ S=d; return; }        // ничего не изменилось — не перерисовываем
-    lastSig=sig; S=d; cacheSave(d);
+    if (silent && sig===lastSig && S) return;               // ничего не изменилось — не перерисовываем
+    adopt(d); lastSig=sig;
     if (bi>=branches().length) bi=0;
     if (route()) return;
     render(); refreshSheet();
   }).catch(function(e){
-    loading=false; spin(false);
-    if (netErr(e) && S){ render(); return; }                     // офлайн — работаем на кеше
+    loading=false;
+    if (netErr(e) && S){ if (!silent) toast('Нет связи — работаю с сохранёнными данными'); render(); return; }   // офлайн — работаем на кеше
     if (needKey){ screen='settings'; render(); toast(e.message); return; }   // сервер просит ключ — сразу в настройки
     if(!silent){ render(); }
     toast(e.message);
@@ -453,12 +686,12 @@ function route(){
   if (!S || !S.configured || screen==='settings' || screen==='leads') return false;
   if (session && session.day !== today()) session = null;            // наступил новый день — спросим заново
   if (session) return false;
+  if (screen==='start'){ fixPick(); render(); return true; }          // уже на стартовом экране: не сбрасываем выбор человека
   var tr = trainsToday();
   if (tr.length) { openStart(tr[0]); return true; }                  // сегодня тренировка — стартовый экран
   session = { branch: bname(), iso: null, day: today(), skipped: true };
   return false;
 }
-function spin(){}
 setInterval(function(){
   var a=document.activeElement;
   if (API && screen==='main' && !sheetKey && !pending && !loading && document.visibilityState==='visible' && !(a && a.tagName==='INPUT')) load(true);
@@ -473,9 +706,11 @@ function themeColor(){
 function render(){
   themeColor();
   if (screen==='settings') return renderSettings();
-  if (screen==='start') return renderStart();
+  if (screen==='start' && S && S.configured) return renderStart();
+  if (screen==='start') screen='main';
   if (screen==='leads') return renderLeads();
   var c=document.querySelector('.content'), y=c?c.scrollTop:0, st=document.querySelector('.strip'), x=st?st.scrollLeft:null;
+  var ae=document.activeElement, keepQ=(ae && ae.id==='q') ? [ae.selectionStart, ae.selectionEnd] : null;   // не терять поиск, пока человек печатает
   var tabs=tabsHtml();
   var h='<div class="top"><div class="row"><div class="logo"><img src="icon-192.png" alt=""></div>'+
     '<div class="grow"><div class="title">CREW</div><div class="sub">'+(S&&S.configured?esc(S.monthLabel):'не подключено')+'</div></div>'+
@@ -488,7 +723,9 @@ function render(){
     var b=B();
     h+='<div class="content">';
     if (b.error) h+='<div class="err">'+esc(b.error)+'</div>';
-    else h+=(S.monthBehind?('<div class="banner"><span>Начался новый месяц, а таблица ещё за <b>'+esc(S.monthLabel)+'</b>.</span><button onclick="newMonth()">Открыть новый месяц</button></div>'):'')+
+    else h+=(updateReady?'<div class="banner"><span>Вышла новая версия приложения.</span><button onclick="location.reload()">Обновить</button></div>':'')+
+      (monthBehind()?('<div class="banner"><span>Начался новый месяц, а таблица ещё за <b>'+esc(S.monthLabel)+'</b>.</span><button onclick="newMonth()">Открыть новый месяц</button></div>'):'')+
+      calWarn(bname())+
       strip(b)+summary(b)+'<input class="search" id="q" type="search" placeholder="Найти ребёнка" value="'+esc(q)+'" oninput="q=this.value;filter()">'+list(b);
     h+='</div>';
     if (!b.error) h+='<button class="fab" onclick="openAdd()" aria-label="Добавить ребёнка">'+IC.plus+'</button>';
@@ -496,6 +733,7 @@ function render(){
   $('app').innerHTML=h;
   filter();
   c=document.querySelector('.content'); if(c) c.scrollTop=y;
+  if (keepQ){ var nq=$('q'); if (nq){ nq.focus(); try{ nq.setSelectionRange(keepQ[0],keepQ[1]); }catch(e){} } }
   st=document.querySelector('.strip');
   if (st){ if (x!==null) st.scrollLeft=x; else { var s=st.querySelector('.sel'); if(s) st.scrollLeft=s.offsetLeft-st.clientWidth/2+s.clientWidth/2; } }
 }
@@ -507,6 +745,55 @@ function tabsHtml(){
   var n=activeLeads().length;
   t+='<div class="tab'+(screen==='leads'?' on':'')+'" onclick="openLeads()">Записались'+(n?' <b class="cnt">'+n+'</b>':'')+'</div>';
   return '<div class="tabs">'+t+'</div>';
+}
+/** Таблица отстала от реального месяца (на случай, если сервер сам этого не пометил). */
+function monthBehind(){
+  if (S.monthBehind) return true;
+  if (!S.month) return false;
+  var n=new Date();
+  return (S.month.year*12+S.month.monthIdx) < (n.getFullYear()*12+n.getMonth());
+}
+/** Сравнивает даты тренировок в таблице с расписанием (днями недели). Дни с отметками — не ошибка, их сервер оставляет сознательно. */
+function calendarProblem(d, name){
+  try{
+    var b=d.branches[name], days=d.days && d.days[name];
+    if (!b || b.error || !days || !days.length || !d.month) return null;
+    var y=d.month.year, m=d.month.monthIdx, n=new Date(y,m+1,0).getDate(), want={}, have={}, missing=[], extra=[];
+    for (var i=1;i<=n;i++){ if (days.indexOf(DOW[new Date(y,m,i).getDay()])>=0) want[y+'-'+pad(m+1)+'-'+pad(i)]=1; }
+    (b.dates||[]).forEach(function(x){ have[x.iso]=1; });
+    Object.keys(want).sort().forEach(function(iso){ if (!have[iso]) missing.push(iso); });
+    Object.keys(have).sort().forEach(function(iso){
+      if (want[iso]) return;
+      if ((b.kids||[]).some(function(k){ return k.attendance && k.attendance[iso]; })) return;
+      extra.push(iso);
+    });
+    return (missing.length||extra.length) ? {missing:missing, extra:extra} : null;
+  }catch(e){ return null; }
+}
+function calKey(name, p){ return 'bk72_calok_'+S.month.year+'-'+S.month.monthIdx+'_'+name+'_'+p.missing.join(',')+'|'+p.extra.join(','); }
+function calWarn(name){
+  if (!S || !S.configured) return '';
+  var p=calendarProblem(S, name); if (!p) return '';
+  try{ if (localStorage.getItem(calKey(name,p))) return ''; }catch(e){}
+  var parts=[];
+  if (p.missing.length) parts.push('нет дней: <b>'+p.missing.map(lbl).join(', ')+'</b>');
+  if (p.extra.length) parts.push('лишние: <b>'+p.extra.map(lbl).join(', ')+'</b>');
+  return '<div class="banner"><span>Даты в календаре не совпадают с расписанием ('+parts.join('; ')+').</span>'+
+    '<button onclick="fixCalendar(\''+esc(name)+'\')">Исправить</button>'+
+    '<button class="alt" onclick="calOk(\''+esc(name)+'\')">Так и надо</button></div>';
+}
+function calOk(name){
+  var p=calendarProblem(S,name); if (!p) return;
+  try{ localStorage.setItem(calKey(name,p),'1'); }catch(e){}
+  if (screen==='start') renderStart(); else render();
+}
+/** Пересобрать календарь филиала по расписанию (дни с отметками сервер оставляет). */
+function fixCalendar(name){
+  var days=(S.days&&S.days[name])||[]; if (!days.length) return;
+  begin(); toast('Исправляю календарь…');
+  api('setBranchDays',[name,days],90000).then(function(d){
+    adopt(d); lastSig=''; toast('Календарь приведён к расписанию'); render();
+  }).catch(function(e){ toast('Не получилось: '+e.message); }).then(function(){ end(); });
 }
 function leads(){ return (S && S.leads) ? S.leads.filter(function(l){ return l.status!==DONE; }) : []; }   // зачисленные из списка пропадают
 function activeLeads(){ return leads().filter(function(l){ return l.status!==DONE; }); }
@@ -526,7 +813,7 @@ function summary(b){
   var s=curIso(), d=new Date(s+'T12:00:00'), n=b.kids.filter(function(k){ return k.attendance[s]; }).length;
   var mark = s===today() ? '<span class="tag g">сегодня</span>' : (s>today() ? '<span class="tag f">ещё не прошла</span>' : '<span class="tag w">другой день</span>');
   var qn = queueCount();
-  if (!navigator.onLine || qn) mark += '<span class="tag off">'+(navigator.onLine?'':'офлайн')+(qn?(navigator.onLine?'':' · ')+qn+' ждут':'')+'</span>';
+  if (!isOnline() || qn) mark += '<span class="tag off">'+(isOnline()?'':'офлайн')+(qn?(isOnline()?'':' · ')+qn+' ждут':'')+'</span>';
   return '<div class="summary"><span>'+DOW[d.getDay()].toLowerCase()+', '+d.getDate()+' '+GEN[d.getMonth()]+' '+mark+
     ' <a href="#" onclick="openStart(bi);return false;" style="color:var(--accent);text-decoration:none;font-weight:650">сменить</a></span>'+
     '<span>пришли <b>'+n+'</b> из '+b.kids.length+'</span></div>';
@@ -546,7 +833,7 @@ function kidCard(k, s){
   return '<div class="card" data-n="'+esc(k.name.toLowerCase())+'"><div class="main" onclick="openKid(\''+k.id+'\')"><div class="nm">'+esc(k.name)+'</div>'+
     '<div class="meta"><span class="pill v">'+k.visits+' зан.</span><span class="pill '+money(k.remainder)+'">'+srub(k.remainder)+'</span>'+
     (away(k)?'<span class="pill miss">'+k.missed+' '+plural(k.missed,'пропуск','пропуска','пропусков')+' подряд</span>':'')+'</div></div>'+
-    '<button class="mark'+(on?' on':'')+(future&&!on?' future':'')+'" onclick="toggle(\''+k.id+'\',\''+s+'\')" aria-label="'+(on?'Снять отметку':'Отметить')+'">'+IC.check+'</button></div>';
+    '<button class="mark'+(on?' on':'')+(future&&!on?' future':'')+(on&&isArmed(k.id,s)?' armed':'')+'" data-k="'+esc(markKey(k.id,s))+'" onclick="toggle(\''+k.id+'\',\''+s+'\')" aria-label="'+(on?'Снять отметку (нажать дважды)':'Отметить')+'">'+IC.check+'</button></div>';
 }
 function list(b){
   if (!b.kids.length) return '<div class="empty"><h3>Пока нет детей</h3>Нажмите «+», чтобы добавить.</div>';
@@ -580,7 +867,7 @@ function list(b){
           '<span class="pill v">'+(k.lastVisit?('был '+lbl(k.lastVisit)):'не был')+'</span>'+
           '<span class="pill '+money(k.remainder)+'">'+srub(k.remainder)+'</span>'+
           '<span class="pill grp">'+esc(k.group)+'</span></div></div>'+
-          '<button class="mark'+(k.attendance[s]?' on':'')+'" onclick="toggle(\''+k.id+'\',\''+s+'\')" aria-label="Отметить">'+IC.check+'</button></div>';
+          '<button class="mark'+(k.attendance[s]?' on':'')+(k.attendance[s]&&isArmed(k.id,s)?' armed':'')+'" data-k="'+esc(markKey(k.id,s))+'" onclick="toggle(\''+k.id+'\',\''+s+'\')" aria-label="'+(k.attendance[s]?'Снять отметку (нажать дважды)':'Отметить')+'">'+IC.check+'</button></div>';
       }).join('')+'</div>';
   }
   return h;
@@ -601,11 +888,11 @@ function moveKid(id, dir){
     b0.kids[a]=same[j]; b0.kids[b2]=same[i];
     cacheSave(S); render(); openKid(id);
   }
-  pending++;
+  begin();
   send('moveChild',[branch,id,dir]).then(function(b){
     if (b && b.queued) return;
-    if (b && b.kids){ S.branches[branch]=b; cacheSave(S); render(); refreshSheet(); }
-  }).catch(function(e){ toast('Порядок не сохранился: '+e.message); }).then(function(){ pending--; });
+    if (b && b.kids){ putBranch(branch,b); cacheSave(S); render(); refreshSheet(); }
+  }).catch(function(e){ toast('Порядок не сохранился: '+e.message); }).then(function(){ end(); });
 }
 
 // ======== записались (новички до зачисления) ========
@@ -663,7 +950,7 @@ function pickTrial(iso){ ltrial = ltrial===iso ? null : iso; $('ldt').innerHTML=
 function doAddLead(){
   var name=$('ln').value.trim();
   if(!name){ toast('Укажите имя'); return; }
-  $('lgo').disabled=true; pending++;
+  $('lgo').disabled=true; begin();
   var br=branches()[lbranch], ph=phoneOut('lp'), note=$('lc').value.trim();
   send('addLead',[br, name, ph, ltrial, note])
     .then(function(ls){
@@ -675,7 +962,7 @@ function doAddLead(){
       }
       S.leads=ls; cacheSave(S); closeSheet(); screen='leads'; render(); toast(name+' — записан(а)');
     })
-    .catch(function(e){ toast('Ошибка: '+e.message); var x=$('lgo'); if(x) x.disabled=false; }).then(function(){ pending--; });
+    .catch(function(e){ toast('Ошибка: '+e.message); var x=$('lgo'); if(x) x.disabled=false; }).then(function(){ end(); });
 }
 function lead(id){ var l=leads().filter(function(x){ return x.id===id; }); return l[0]||null; }
 function openLead(id){
@@ -710,12 +997,12 @@ function delLead(id){
     S.leads=(S.leads||[]).filter(function(x){ return x.id!==id; });
     cacheSave(S); closeSheet(); render(); toast('Удалено'); return;
   }
-  pending++;
+  begin();
   send('deleteLead',[id]).then(function(ls){
     if (ls && ls.queued) S.leads=(S.leads||[]).filter(function(x){ return x.id!==id; });
     else S.leads=ls;
     cacheSave(S); closeSheet(); render(); toast('Удалено');
-  }).catch(function(e){ toast('Ошибка: '+e.message); }).then(function(){ pending--; });
+  }).catch(function(e){ toast('Ошибка: '+e.message); }).then(function(){ end(); });
 }
 var jtype='abon';
 function openJoin(id){
@@ -737,7 +1024,7 @@ function doJoin(id){
   var g=groupVal('jg');
   if(!g){ toast('Выберите группу'); return; }
   var l=lead(id); if(!l) return;
-  $('jgo').disabled=true; pending++;
+  $('jgo').disabled=true; begin();
   var branch=l.branch, type=jtype;
   /** Ребёнок сразу переезжает в группу на экране, а запись пропадает из «Записались». */
   var applyLocal=function(){
@@ -751,13 +1038,13 @@ function doJoin(id){
   if (isTmp(id)){                                        // запись ещё не в таблице — сразу добавим как ребёнка
     dropQueuedLead(l);
     queueAdd('addChild',[branch,l.name,g,l.phone||'','',type]);
-    applyLocal(); pending--; flush(); return;
+    applyLocal(); end(); flush(); return;
   }
   send('convertLead',[id,g,type]).then(function(r){
     if (r && r.queued){ applyLocal(); return; }
-    S.branches[r.branch]=r.data; S.leads=r.leads; cacheSave(S);
+    putBranch(r.branch,r.data); S.leads=r.leads; cacheSave(S);
     closeSheet(); render(); toast('Зачислен(а) в «'+g+'»');
-  }).catch(function(e){ toast('Ошибка: '+e.message); var x=$('jgo'); if(x) x.disabled=false; }).then(function(){ pending--; });
+  }).catch(function(e){ toast('Ошибка: '+e.message); var x=$('jgo'); if(x) x.disabled=false; }).then(function(){ end(); });
 }
 
 // ======== стартовый экран: адрес и дата тренировки ========
@@ -769,6 +1056,12 @@ function trainsToday(){
     if (b && !b.error && (b.dates||[]).some(function(d){ return d.iso===t; })) out.push(i);
   });
   return out;
+}
+/** Выбор на стартовом экране должен оставаться допустимым после обновления данных. */
+function fixPick(){
+  if (pick.bi>=branches().length) pick.bi=0;
+  var b=S.branches[branches()[pick.bi]], ok=b && b.dates && b.dates.some(function(d){ return d.iso===pick.iso; });
+  if (!ok) pick.iso=suggestIso(pick.bi);
 }
 function openStart(pref){
   closeSheet();
@@ -811,6 +1104,7 @@ function renderStart(){
     return '<div class="dbtn'+(d.iso===pick.iso?' on':'')+(later?' dis':'')+'"'+(later?'':' onclick="pickDay(\''+d.iso+'\')"')+'><div class="dw">'+d.dow+'</div><div class="dd">'+d.label.slice(0,2)+'</div><div class="nt">'+note+'</div></div>';
   }).join('') || '<div class="hint">В таблице нет столбцов с датами на '+esc(S.monthLabel)+'.<br>Откройте таблицу → меню «БРЕЙКИДС72» → «Обновить календарь по расписанию».'+
     '<button class="btn s" style="margin-top:10px" onclick="openDiag()">Проверить таблицу</button></div>';
+  var warn = calWarn(branches()[pick.bi]);
 
   var all = b.dates||[], past = all.filter(function(d){ return d.iso<=t; });
   var notYet = all.length>0 && past.length===0;             // все тренировки месяца ещё впереди
@@ -832,7 +1126,7 @@ function renderStart(){
       '<h1>Тренировка</h1>'+
       '<p class="lead">Подтвердите адрес и дату — отметки запишутся именно в этот день.</p>'+
       '<div class="step a1"><i>1</i>Адрес</div><div class="pickbig a2">'+list+'</div>'+
-      '<div class="step a3"><i>2</i>Дата тренировки · '+esc(S.monthLabel)+'</div><div class="dates" id="dates">'+dates+'</div>'+
+      '<div class="step a3"><i>2</i>Дата тренировки · '+esc(S.monthLabel)+'</div><div class="dates" id="dates">'+dates+'</div>'+warn+
       mini+
       '<div class="startfoot">'+
         (ready ? '<div class="confirm">Отмечаем <b>'+esc(humanDate(pick.iso))+'</b>'+(isToday?' <span class="tag">сегодня</span>':'')+'<br>'+esc(branches()[pick.bi])+'</div>'
@@ -863,21 +1157,51 @@ function skipStart(){
 }
 
 // ======== отметка ========
+/** Поставить отметку — один тап. Снять — два тапа подряд: так отметку не снять случайно. */
+var armed = null, armTimer = null, lastAdd = {}, inflight = {};
+var ARM_MS = 1800;      // сколько ждём второй тап
+var GUARD_MS = 500;     // сразу после постановки отметки лишние тапы игнорируются (дрожащий палец, двойной тап по привычке)
+function markKey(id, iso){ return id+'|'+iso; }
+function isArmed(id, iso){ return !!armed && armed.key===markKey(id,iso) && Date.now()<armed.until; }
+function setArmed(key){
+  clearTimeout(armTimer);
+  [].slice.call(document.querySelectorAll('.armed')).forEach(function(e){ e.classList.remove('armed'); });
+  if (!key){ armed=null; return; }
+  armed={ key:key, until:Date.now()+ARM_MS };
+  [].slice.call(document.querySelectorAll('[data-k]')).forEach(function(e){ if (e.getAttribute('data-k')===key) e.classList.add('armed'); });
+  armTimer=setTimeout(function(){ if (armed && armed.key===key) setArmed(null); }, ARM_MS);
+  try{ if (navigator.vibrate) navigator.vibrate(15); }catch(e){}
+}
 function toggle(id, iso){
   var k=kid(id); if(!k) return;
+  var key=markKey(id,iso), now=Date.now();
+  if (k.attendance[iso]){                                   // снятие отметки
+    if (lastAdd[key] && now-lastAdd[key]<GUARD_MS) return;
+    if (!isArmed(id,iso)){ setArmed(key); toast('Чтобы снять отметку, нажмите ещё раз'); return; }
+    setArmed(null);
+  } else {
+    if (iso>today()){ toast('Тренировка ещё не прошла — отметим в этот день'); return; }
+    lastAdd[key]=now;
+  }
   var val=!k.attendance[iso], branch=bname();
-  if (val && iso>today()){ toast('Тренировка ещё не прошла — отметим в этот день'); return; }
   if (val) k.attendance[iso]=true; else delete k.attendance[iso];
   k.visits+=val?1:-1; k.remainder=k.balance-k.visits*k.price;
-  render(); refreshSheet(); pending++;
+  begin(); inflight[id]=(inflight[id]||0)+1;
+  render(); refreshSheet();
   send('setAttendance',[branch,id,iso,val]).then(function(r){
-    if (r && r.queued){ cacheSave(S); render(); refreshSheet(); return; }
-    var kk=kid(id); if(kk){ kk.visits=r.visits; kk.remainder=r.remainder; kk.balance=r.balance; kk.price=r.price; }
-    cacheSave(S); render(); refreshSheet();
+    if (r && r.queued){ cacheSave(S); return; }
+    var kk=kid(id);
+    // пока по этому ребёнку летят другие запросы, цифры сервера устарели — их применит последний ответ
+    if (kk && r && r.visits!==undefined && inflight[id]<=1){
+      var changed = kk.visits!==r.visits || kk.remainder!==r.remainder || kk.balance!==r.balance || kk.price!==r.price;
+      kk.visits=r.visits; kk.remainder=r.remainder; kk.balance=r.balance; kk.price=r.price;
+      if (changed){ render(); refreshSheet(); }
+    }
+    cacheSave(S);
   }).catch(function(e){
     var kk=kid(id); if(kk){ if(val) delete kk.attendance[iso]; else kk.attendance[iso]=true; kk.visits+=val?-1:1; kk.remainder=kk.balance-kk.visits*kk.price; }
-    render(); refreshSheet(); toast('Не сохранилось: '+e.message);
-  }).then(function(){ pending--; });
+    cacheSave(S); render(); refreshSheet(); toast('Не сохранилось: '+e.message);
+  }).then(function(){ inflight[id]=Math.max(0,(inflight[id]||1)-1); end(); });
 }
 
 // ======== нижний лист ========
@@ -937,7 +1261,7 @@ function openKid(id){
     '<div class="hint">Порядок меняется и в таблице. Работает внутри группы'+(sortMode==='visits'?'; сейчас включена сортировка по посещаемости — переключите на «свой порядок», чтобы увидеть результат':'')+'.</div>'+
     '<div class="sec">Оплаты</div><div id="kp"><div class="hint">Загрузка…</div></div>'+
     '<button class="btn q" onclick="closeSheet()">Закрыть</button>', 'kid:'+id);
-  if (!navigator.onLine){ var ek=$('kp'); if(ek) ek.innerHTML='<div class="hint">История оплат появится, когда будет интернет.</div>'; }
+  if (!isOnline()){ var ek=$('kp'); if(ek) ek.innerHTML='<div class="hint">История оплат появится, когда будет интернет.</div>'; }
   else api('getPaymentLog',[20,id]).then(function(l){ var e=$('kp'); if(!e) return;
     e.innerHTML=l.length?l.map(function(r){ return '<div class="line"><div class="dt">'+esc(r.date)+'</div><div class="grow">'+esc(r.type)+'</div><div class="am">'+rub(r.amount)+'</div></div>'; }).join(''):'<div class="hint">Оплат через приложение в этом месяце не было.</div>';
   }).catch(function(){ var e=$('kp'); if(e) e.innerHTML='<div class="hint">Не удалось загрузить.</div>'; });
@@ -950,14 +1274,14 @@ function cal(k){
   for (var i=0;i<start;i++) h+='<div></div>';
   for (var d=1; d<=days; d++){
     var iso=y+'-'+pad(m+1)+'-'+pad(d), c='d';
-    if (tr[iso]){ c+=' tr'; if(k.attendance[iso]){ c+=' att'; att.push(lbl(iso)); } else if(iso<t){ c+=' miss'; miss.push(lbl(iso)); } }
+    if (tr[iso]){ c+=' tr'; if(k.attendance[iso]){ c+=' att'+(isArmed(k.id,iso)?' armed':''); att.push(lbl(iso)); } else if(iso<t){ c+=' miss'; miss.push(lbl(iso)); } }
     if (iso===t) c+=' today';
     if (tr[iso] && iso>t) c+=' later';
-    h+='<div class="'+c+'"'+(tr[iso] && (iso<=t || k.attendance[iso])?' onclick="toggle(\''+k.id+'\',\''+iso+'\')"':'')+'>'+d+'</div>';
+    h+='<div class="'+c+'"'+(tr[iso] && (iso<=t || k.attendance[iso])?' data-k="'+esc(markKey(k.id,iso))+'" onclick="toggle(\''+k.id+'\',\''+iso+'\')"':'')+'>'+d+'</div>';
   }
   return h+'</div><div class="legend"><span><i style="background:var(--good)"></i>был</span><span><i style="background:var(--bad-soft);border:1px solid var(--bad)"></i>пропустил</span><span><i style="border:1.5px solid rgba(255,255,255,.3)"></i>впереди</span></div>'+
     '<div class="visited">'+(att.length?'Был: <b>'+att.join(', ')+'</b>':'В этом месяце ещё не был')+(miss.length?'<br>Пропустил: '+miss.join(', '):'')+'</div>'+
-    '<div class="hint">Нажмите на прошедший день тренировки, чтобы поставить или снять отметку. Будущие дни отмечать нельзя — только по факту.</div>';
+    '<div class="hint">Нажмите на прошедший день тренировки, чтобы поставить отметку. Чтобы снять — нажмите дважды. Будущие дни отмечать нельзя — только по факту.</div>';
 }
 function share(id){
   var k=kid(id), b=B(), t=today();
@@ -990,13 +1314,13 @@ function doPay(id){
   if(k){ k.balance+=amount; k.price=ptype==='single'?S.config.singlePrice:S.config.abonPrice;
          k.payType=ptype==='single'?'РАЗОВОЕ':'АБОНЕМЕНТ'; k.remainder=k.balance-k.visits*k.price; }
   cacheSave(S); render(); openKid(id); toast('Оплата записана · '+rub(amount));
-  pending++;
+  begin();
   send('addPayment',[branch,id,ptype,n]).then(function(r){
     if (r && r.queued) return;                          // уйдёт при появлении связи
     var kk=kid(id);
     if(kk && r && r.balance!==undefined){ kk.balance=r.balance; kk.price=r.price; kk.remainder=r.remainder; kk.visits=r.visits; }
     cacheSave(S); render(); refreshSheet();
-  }).catch(function(e){ toast('Не записалось в таблицу: '+e.message); }).then(function(){ pending--; });
+  }).catch(function(e){ toast('Не записалось в таблицу: '+e.message); }).then(function(){ end(); });
 }
 
 // ======== добавить / изменить ========
@@ -1040,11 +1364,11 @@ function doAdd(){
     payType: single?'РАЗОВОЕ':'АБОНЕМЕНТ', balance:0, price: single?S.config.singlePrice:S.config.abonPrice,
     remainder:0, visits:0, attendance:{}, missed:0, lastVisit:'', pendingNew:true });
   cacheSave(S); closeSheet(); render(); toast(name+' — добавлен(а)');
-  pending++;
+  begin();
   send('addChild',[branch,name,g,p1,p2,atype]).then(function(b){
     if (b && b.queued) return;
-    if (b && b.kids){ S.branches[branch]=b; cacheSave(S); render(); }
-  }).catch(function(e){ toast('Не сохранилось в таблице: '+e.message); }).then(function(){ pending--; });
+    if (b && b.kids){ putBranch(branch,b); cacheSave(S); render(); }
+  }).catch(function(e){ toast('Не сохранилось в таблице: '+e.message); }).then(function(){ end(); });
 }
 function openEdit(id){
   var k=kid(id);
@@ -1073,11 +1397,11 @@ function doEdit(id){
   if(k){ k.name=f.name; k.group=f.group; k.phone1=f.phone1; k.phone2=f.phone2; k.payType=f.payType;
          k.price=Number(f.price)||k.price; k.balance=Number(f.balance)||0; k.remainder=k.balance-k.visits*k.price; }
   cacheSave(S); render(); openKid(id); toast('Сохранено');
-  pending++;
+  begin();
   send('updateChild',[branch,id,f]).then(function(b){
     if (b && b.queued) return;                          // уйдёт, когда появится интернет
-    if (b && b.kids){ S.branches[branch]=b; cacheSave(S); render(); refreshSheet(); }
-  }).catch(function(e){ toast('Не сохранилось в таблице: '+e.message); }).then(function(){ pending--; });
+    if (b && b.kids){ putBranch(branch,b); cacheSave(S); render(); refreshSheet(); }
+  }).catch(function(e){ toast('Не сохранилось в таблице: '+e.message); }).then(function(){ end(); });
 }
 
 /** Что скрипт видит в таблице — если данные выглядят странно. */
@@ -1102,7 +1426,7 @@ function openDiag(){
 
 // ======== настройки ========
 function openSettings(){ closeSheet(); screen='settings'; render(); }
-function closeSettings(){ screen = session ? 'main' : 'start'; render(); load(true); }
+function closeSettings(){ screen = (session || !S || !S.configured) ? 'main' : 'start'; render(); load(true); }
 function renderSettings(){
   var conf=S&&S.configured, now=new Date(), m=conf?S.month.monthIdx:now.getMonth(), y=conf?S.month.year:now.getFullYear();
   var h='<div class="top"><div class="row"><button class="ib" onclick="closeSettings()" aria-label="Назад">'+IC.back+'</button><div class="title">Настройки</div></div></div><div class="content">';
@@ -1118,6 +1442,14 @@ function renderSettings(){
     (conf?'<p>Скрипт живёт внутри таблицы <b>'+esc(S.ssName)+'</b>. Текущий месяц: '+esc(S.monthLabel)+'. Цены меняются на листе «Настройки» в самой таблице, расписание — прямо здесь, ниже.</p><a class="btn s" href="'+esc(S.ssUrl)+'" target="_blank" rel="noopener">Открыть таблицу</a>'
           :'<p>Сервер не отвечает или код в таблице не обновлён. Проверьте адрес сервера выше.</p>')+
     '</div>';
+  var fl=failedGet();
+  if (fl.length){
+    var AN={setAttendance:'Отметка',addPayment:'Оплата',updateChild:'Правка ребёнка',addLead:'Новая запись',addChild:'Новый ребёнок',moveChild:'Порядок в списке',deleteLead:'Удаление записи',convertLead:'Зачисление'};
+    h+='<div class="panel"><h3>Не ушло в таблицу <span class="st no">'+fl.length+'</span></h3><p>Эти изменения таблица не приняла. Проверьте их в таблице вручную.</p>'+
+      fl.slice().reverse().map(function(f){ var d=new Date(f.t||Date.now());
+        return '<div class="hint" style="margin-bottom:6px"><b>'+esc(AN[f.action]||f.action)+'</b> · '+pad(d.getDate())+'.'+pad(d.getMonth()+1)+' '+pad(d.getHours())+':'+pad(d.getMinutes())+'<br>'+esc((f.params||[]).filter(function(x){return typeof x!=='object';}).join(' · '))+'<br><span style="color:var(--bad)">'+esc(f.msg)+'</span></div>'; }).join('')+
+      '<button class="btn q" onclick="clearFailed()">Очистить список</button></div>';
+  }
   if (conf){
     h+='<div class="panel"><h3>Расписание</h3><p>Отмеченные дни недели — это и есть календарь месяца. Лишние дни из таблицы убираются автоматически (дни с отметками остаются).</p>'+
       branches().map(function(n){
@@ -1145,6 +1477,7 @@ function renderSettings(){
   }
   $('app').innerHTML=h+'</div>';
 }
+function clearFailed(){ try{ localStorage.removeItem('bk72_failed'); }catch(e){} renderSettings(); }
 function copyForm(){
   var u=API||'';
   if(!u){ toast('Сначала укажите адрес сервера'); return; }
@@ -1164,7 +1497,8 @@ function testApi(){
     if(e) e.innerHTML='<b style="color:var(--bad)">Адрес выглядит неправильно.</b> Нужен вид https://script.google.com/macros/s/…/exec — из «Управление развертываниями», поле «URL веб-приложения».';
     return;
   }
-  fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'getAppData',params:[true]})})
+  var tctl=window.AbortController?new AbortController():null; if(tctl) setTimeout(function(){ tctl.abort(); },15000);
+  fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},signal:tctl?tctl.signal:undefined,body:JSON.stringify({action:'getAppData',params:[true]})})
     .then(function(r){ return r.text().then(function(t){ return {s:r.status,t:t}; }); })
     .then(function(x){
       if (x.s===404){ e.innerHTML='<b style="color:var(--bad)">404 — развертывания по этому адресу нет.</b> Скорее всего оно архивировано или скопирован адрес тестового запуска (/dev). Возьмите активное развертывание и адрес на /exec.'; return; }
@@ -1183,49 +1517,77 @@ function saveApi(){
   if(!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(u)){ toast('Нужна ссылка вида https://script.google.com/macros/s/…/exec'); return; }
   API=u; try{localStorage.setItem('bk72_apiUrl',u);}catch(e){}
   toast('Проверяем…');
-  api('getAppData').then(function(d){ S=d; lastLoad=Date.now(); sel={}; cacheSave(d); renderSettings(); toast('Готово: '+d.ssName); flush(); })
+  api('getAppData',[],25000,true).then(function(d){ adopt(d); lastSig=''; lastLoad=Date.now(); sel={}; renderSettings(); toast('Готово: '+d.ssName); flush(); })
     .catch(function(e){ renderSettings(); toast('Сервер не отвечает: '+e.message); });
 }
-function newMonth(){
-  if(!confirm('Создать таблицу на следующий месяц и переключить приложение на неё?')) return;
-  var b=$('snm'), was=S.monthLabel;
-  b.disabled=true; b.textContent='Готовим новый месяц, это до минуты…';
-  var fail=function(msg){ toast(msg); var x=$('snm'); if(x){ x.disabled=false; x.textContent='Создать таблицу на следующий месяц'; } };
-  api('createNextMonthCopy', [], 180000)                        // операция долгая — ждём дольше обычного
-    .then(function(r){ toast('Готово: '+r.newName); return api('getAppData'); })
-    .then(function(d){ S=d; cacheSave(d); sel={}; session=null; openStart(); })
-    .catch(function(e){
-      // связь могла оборваться, пока скрипт работал — проверим, не создан ли месяц уже
-      api('getAppData').then(function(d){
-        S=d; cacheSave(d);
-        if (d.monthLabel !== was){ sel={}; session=null; toast('Готово: '+d.monthLabel); openStart(); return; }
-        fail('Не получилось: '+e.message);
-      }).catch(function(){ fail('Не получилось: '+e.message); });
-    });
+var monthBusy=false;
+function delay(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+/** Свежие данные с несколькими попытками: связь после долгой операции часто «моргает». */
+function getFresh(tries){
+  return api('getAppData',[],60000,true).catch(function(e){
+    if (tries>1 && netErr(e)) return delay(2500).then(function(){ return getFresh(tries-1); });
+    throw e;
+  });
 }
+function newMonth(){
+  if (monthBusy) return;
+  if (!S || !S.configured) return;
+  if(!confirm('Создать таблицу на следующий месяц и переключить приложение на неё?')) return;
+  var was=S.monthLabel, createErr=null;
+  monthBusy=true; begin();
+  var btn=$('snm');                                           // кнопки может не быть: запуск и из баннера на главном экране
+  if (btn){ btn.disabled=true; btn.textContent='Готовим новый месяц, это до минуты…'; }
+  document.querySelectorAll('.banner button').forEach(function(x){ x.disabled=true; });
+  toast('Готовим новый месяц, это может занять минуту…');
+  var release=function(){
+    monthBusy=false; end();
+    var x=$('snm'); if(x){ x.disabled=false; x.textContent='Открыть новый месяц сейчас'; }
+    document.querySelectorAll('.banner button').forEach(function(y){ y.disabled=false; });
+  };
+  api('createNextMonthCopy', [], 180000, true)                 // операция долгая — ждём дольше обычного
+    .then(function(r){ toast('Готово: '+((r && r.newName)||'новый месяц')); })
+    .catch(function(e){ createErr=e; })                        // связь могла оборваться, пока скрипт работал — проверим сами
+    .then(function(){ return getFresh(4).catch(function(e){ throw createErr||e; }); })
+    .then(function(d){
+      if (d.monthLabel===was && createErr) throw createErr;    // месяц так и не сменился
+      lastSig=''; adopt(d); sel={}; session=null; q='';
+      var bad=branches().filter(function(n){ return calendarProblem(d,n); });
+      release();
+      openStart();
+      if (bad.length) toast('Проверьте даты: календарь не совпал с расписанием ('+bad.join(', ')+')');
+    })
+    .catch(function(e){ release(); toast('Не получилось: '+e.message); });
+}
+var dayTimers={};
+/** Дни недели можно тыкать подряд: на сервер уходит один запрос с итоговым набором (раньше каждый тап = отдельный запрос, ответы путались). */
 function toggleDay(el){
   var box=el.parentNode, branch=box.getAttribute('data-b');
   el.classList.toggle('on');
   var days=[].slice.call(box.querySelectorAll('.tag.on')).map(function(b){ return b.textContent; });
   if(!days.length){ el.classList.add('on'); toast('Хотя бы один день нужен'); return; }
-  box.style.opacity='.5'; pending++;
-  api('setBranchDays',[branch,days],60000).then(function(d){
-    S=d; cacheSave(d); toast(branch+': '+days.join(', '));
-    render();
-  }).catch(function(e){ toast('Ошибка: '+e.message); render(); }).then(function(){ pending--; });
+  if (dayTimers[branch]) clearTimeout(dayTimers[branch]); else begin();   // автообновление не мешает, пока человек выбирает
+  dayTimers[branch]=setTimeout(function(){
+    delete dayTimers[branch];
+    var cur=[].slice.call(document.querySelectorAll('.tags.days')).filter(function(x){ return x.getAttribute('data-b')===branch; })[0];
+    var ds=cur ? [].slice.call(cur.querySelectorAll('.tag.on')).map(function(b){ return b.textContent; }) : days;
+    if (cur) cur.style.opacity='.5';
+    api('setBranchDays',[branch,ds],60000).then(function(d){
+      adopt(d); lastSig=''; toast(branch+': '+ds.join(', ')); render();
+    }).catch(function(e){ toast('Ошибка: '+e.message); render(); }).then(function(){ end(); });
+  }, 700);
 }
 function dropOdd(branch){
   if(!confirm('Удалить дни вне расписания вместе с отметками в них? Эти посещения будут потеряны.')) return;
-  var days=(S.days&&S.days[branch])||[]; pending++;
-  api('setBranchDays',[branch,days,true],60000).then(function(d){ S=d; cacheSave(d); toast('Календарь приведён к расписанию'); render(); })
-    .catch(function(e){ toast('Ошибка: '+e.message); }).then(function(){ pending--; });
+  var days=(S.days&&S.days[branch])||[]; begin();
+  api('setBranchDays',[branch,days,true],60000).then(function(d){ adopt(d); lastSig=''; toast('Календарь приведён к расписанию'); render(); })
+    .catch(function(e){ toast('Ошибка: '+e.message); }).then(function(){ end(); });
 }
 function zeroAll(){
   if(!confirm('Обнулить баланс у всех детей в обоих филиалах? Отметки и данные останутся.')) return;
-  pending++;
-  api('zeroBalances',[],60000).then(function(r){ toast(r.zeroed?('Обнулено: '+r.zeroed):'Балансы уже нулевые'); return api('getAppData'); })
-    .then(function(d){ S=d; cacheSave(d); render(); })
-    .catch(function(e){ toast('Ошибка: '+e.message); }).then(function(){ pending--; });
+  begin();
+  api('zeroBalances',[],60000).then(function(r){ toast(r&&r.zeroed?('Обнулено: '+r.zeroed):'Балансы уже нулевые'); return api('getAppData'); })
+    .then(function(d){ adopt(d); lastSig=''; render(); })
+    .catch(function(e){ toast('Ошибка: '+e.message); }).then(function(){ end(); });
 }
 function openLog(){
   sheet('<h2>История оплат</h2><div class="sub">'+esc(S.monthLabel)+'</div><div id="lg" style="margin-top:10px"><div class="hint">Загрузка…</div></div><button class="btn q" onclick="closeSheet()">Закрыть</button>','log');
@@ -1236,12 +1598,17 @@ function openLog(){
   }).catch(function(e){ toast('Ошибка: '+e.message); });
 }
 
-if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+  navigator.serviceWorker.addEventListener('message', function(ev){
+    if (ev.data && ev.data.type==='update'){ updateReady=true; if (screen==='main') render(); }   // новая версия скачана — предложим обновиться, не перезагружая посреди работы
+  });
+}
 var cached = cacheLoad();
-if (cached && API){ S = cached.d; if (bi>=branches().length) bi=0; route(); }   // мгновенный старт из кеша
+if (cached && API){ S = cached.d; normalize(S); lastSig = ''; if (bi>=branches().length) bi=0; route(); }   // мгновенный старт из кеша
 render();
-(queueCount() ? flush() : Promise.resolve()).then(function(){ return load(!!cached); }).then(function(){ return flush(); });
-document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='visible') flush(); });
+load(!!cached);                                                // не ждём отправки очереди: экран уже на кеше
+document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='visible') recover(); });
 </script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 // Приложение открывается мгновенно из кэша (в том числе без интернета),
 // а свежая версия файлов подтягивается в фоне и применяется при следующем запуске.
 // Данные таблицы (запросы к Google Apps Script) не кэшируются никогда — они идут POST на другой домен.
-var CACHE = 'crew-v1';
+var CACHE = 'crew-v2';
 var SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-512-maskable.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
@@ -17,16 +17,23 @@ self.addEventListener('activate', function (e) {
   self.clients.claim();
 });
 
-// cache-first + фоновое обновление: экран появляется сразу, файлы обновляются следом
+// cache-first + фоновое обновление: экран появляется сразу, файлы обновляются следом.
+// Если главная страница в сети отличается от закэшированной — сообщаем приложению, оно предложит «Обновить».
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
   var url = new URL(e.request.url);
   if (url.origin !== self.location.origin) return;
+  var isDoc = e.request.mode === 'navigate' || /\/(index\.html)?$/.test(url.pathname);
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then(function (hit) {
-      var net = fetch(e.request).then(function (res) {
+      var net = fetchWithTimeout(e.request, 15000).then(function (res) {
         if (res && res.ok) {
           var copy = res.clone();
+          if (hit && isDoc) {
+            Promise.all([hit.clone().text(), res.clone().text()]).then(function (t) {
+              if (t[0] !== t[1]) notify();
+            }).catch(function () {});
+          }
           caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
         }
         return res;
@@ -39,3 +46,16 @@ self.addEventListener('fetch', function (e) {
     })
   );
 });
+
+// плохая связь: не ждём ответ вечно
+function fetchWithTimeout(req, ms) {
+  if (!self.AbortController) return fetch(req);
+  var ctl = new AbortController();
+  var t = setTimeout(function () { ctl.abort(); }, ms);
+  return fetch(req, { signal: ctl.signal }).then(function (r) { clearTimeout(t); return r; }, function (err) { clearTimeout(t); throw err; });
+}
+function notify() {
+  self.clients.matchAll({ type: 'window' }).then(function (cs) {
+    cs.forEach(function (c) { c.postMessage({ type: 'update' }); });
+  });
+}
