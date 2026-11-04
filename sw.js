@@ -2,7 +2,7 @@
 // Приложение открывается мгновенно из кэша (в том числе без интернета),
 // а свежая версия файлов подтягивается в фоне и применяется при следующем запуске.
 // Данные таблицы (запросы к Google Apps Script) не кэшируются никогда — они идут POST на другой домен.
-var CACHE = 'crew-v2';
+var CACHE = 'crew-v3';
 var SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-512-maskable.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
