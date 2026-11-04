@@ -1,18 +1,18 @@
-/* CREW design tokens — reference for implementation */
+/* CREW 2.0 — cool graphite / electric blue */
 :root {
-  --crew-bg: #F5F5F3;
+  --crew-bg: #F3F5FA;
   --crew-surface: #FFFFFF;
-  --crew-surface-muted: #F0F0ED;
-  --crew-ink: #171717;
-  --crew-muted: #74746F;
-  --crew-border: #E5E4DF;
-  --crew-orange: #FF5A1F;
-  --crew-orange-soft: #FFF0E9;
-  --crew-success: #168653;
-  --crew-success-soft: #E8F5EE;
-  --crew-danger: #C83D36;
-  --crew-danger-soft: #FCEDEC;
+  --crew-surface-muted: #E9EDF5;
+  --crew-ink: #151B2B;
+  --crew-muted: #667085;
+  --crew-border: #E1E6F0;
+  --crew-accent: #526DFF;
+  --crew-accent-soft: #EEF1FF;
+  --crew-success: #16845B;
+  --crew-success-soft: #E7F6EF;
+  --crew-danger: #C83D4D;
+  --crew-danger-soft: #FDECEF;
   --crew-radius-card: 18px;
-  --crew-radius-control: 12px;
-  --crew-shadow-card: 0 2px 10px rgba(20,20,20,.045);
+  --crew-radius-control: 13px;
+  --crew-shadow-card: 0 3px 14px rgba(24, 39, 75, .055);
 }

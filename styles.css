@@ -6,10 +6,8 @@
 :root{
   --bg:var(--crew-bg); --bg2:var(--crew-surface); --card:var(--crew-surface); --card-hi:var(--crew-surface-muted);
   --text:var(--crew-ink); --ink:var(--crew-ink); --muted:#70706B; --faint:#70706B;
-  --accent:var(--crew-orange); --accent-soft:var(--crew-orange-soft);
-  /* Фирменный оранжевый слишком светлый для мелкого текста на белом (2,9:1).
-     Для заливок он остаётся как есть, а текст и значки на светлом берут --accent-ink (4,6:1). */
-  --accent-ink:#C34512;
+  --accent:var(--crew-accent); --accent-soft:var(--crew-accent-soft);
+  --accent-ink:#4058DB;
   --good:#147C4C; --good-soft:var(--crew-success-soft);
   --bad:#BE3932; --bad-soft:var(--crew-danger-soft);
   --border:var(--crew-border); --shadow:var(--crew-shadow-card);
@@ -49,7 +47,7 @@
   .chip .dw{font-size:10.5px;font-weight:700;color:var(--muted);}
   .chip .dd{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;}
   .chip .ct{font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums;}
-  .chip.sel{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(255,90,46,.28);}
+  .chip.sel{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(82,109,255,.22);}
   .chip.sel .dw,.chip.sel .ct{color:rgba(255,255,255,.85);}
   .chip.today::after{content:'';position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--good);}
 
@@ -103,7 +101,7 @@
   .empty h3{color:var(--text);font-size:17px;margin:0 0 6px;}
   .err{background:var(--bad-soft);border:1px solid rgba(255,107,107,.4);border-radius:14px;padding:14px;font-size:14px;line-height:1.5;}
 
-  .fab{position:fixed;right:18px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:18px;background:var(--accent);border:none;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(255,90,46,.32);z-index:20;cursor:pointer;}
+  .fab{position:fixed;right:18px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:18px;background:var(--accent);border:none;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(82,109,255,.24);z-index:20;cursor:pointer;}
   .fab svg{width:26px;height:26px;stroke:#fff;stroke-width:2.6;stroke-linecap:round;fill:none;}
 
   .back{position:fixed;inset:0;background:rgba(16,24,40,.45);z-index:30;display:flex;align-items:flex-end;}
@@ -118,7 +116,7 @@
   .hint{font-size:12px;color:var(--faint);margin-top:5px;line-height:1.45;}
   .two{display:flex;gap:10px;} .two>*{flex:1;min-width:0;}
   .btn{display:flex;align-items:center;justify-content:center;width:100%;padding:13px;border-radius:12px;border:none;font-weight:700;font-size:15px;margin-top:8px;cursor:pointer;text-decoration:none;}
-  .btn.p{background:var(--accent);color:#fff;box-shadow:0 6px 16px rgba(255,90,46,.25);}
+  .btn.p{background:var(--accent);color:#fff;box-shadow:0 6px 16px rgba(82,109,255,.18);}
   .btn.g{background:var(--good);color:#fff;}
   .btn.s{background:var(--card);border:1px solid var(--border);}
   .btn.q{background:transparent;color:var(--muted);}
@@ -287,7 +285,7 @@
   .tile.bad b{color:var(--bad);} .tile.bad svg{stroke:var(--bad);}
   .sech{display:flex;justify-content:space-between;align-items:baseline;margin:18px 2px 10px;font-size:17px;}
   .up{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#fff;border:1px solid var(--border);margin-bottom:8px;cursor:pointer;box-shadow:var(--shadow);}
-  .up.today{background:var(--accent-soft);border-color:#ffd0bd;}
+  .up.today{background:var(--accent-soft);border-color:#D7DEFF;}
   .uw{font-weight:800;font-size:15.5px;} .us{font-size:12.5px;color:var(--muted);margin-top:2px;}
   .chev svg,.row2>svg{width:18px;height:18px;stroke:var(--faint);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;display:block;}
   .row2{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px;border-radius:16px;background:#fff;border:1px solid var(--border);margin-bottom:8px;cursor:pointer;box-shadow:var(--shadow);}
@@ -321,7 +319,7 @@ body{letter-spacing:-.08px;}
 .tab{flex:1 0 auto;min-width:92px;min-height:44px;display:flex;align-items:center;justify-content:center;padding:10px 13px;border-radius:var(--r-ctl);background:var(--card-hi);border-color:transparent;white-space:nowrap;}
 .tab.on{background:var(--ink);border-color:var(--ink);color:#fff;}   /* филиал: графит; оранжевый оставлен для действий и выбора даты */
 .chip{width:58px;min-height:62px;box-shadow:none;}
-.chip.sel{box-shadow:0 5px 12px rgba(255,90,31,.2);}
+.chip.sel{box-shadow:0 5px 12px rgba(82,109,255,.18);}
 .summary{gap:8px;flex-wrap:wrap;line-height:1.5;}
 .summary>span:last-child{margin-left:auto;}
 .lnk{color:var(--accent);text-decoration:none;font-weight:650;margin-left:4px;}
@@ -352,7 +350,7 @@ body{letter-spacing:-.08px;}
 .dbadge{width:46px;height:50px;border-radius:13px;background:var(--card-hi);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
 .dbadge small{font-size:10px;font-weight:750;color:var(--muted);} .dbadge b{font-size:18px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1.1;}
 .up.today .dbadge{background:#fff;}
-button:focus-visible,input:focus-visible,select:focus-visible,[role="button"]:focus-visible,a:focus-visible{outline:3px solid rgba(255,90,31,.35);outline-offset:2px;}
+button:focus-visible,input:focus-visible,select:focus-visible,[role="button"]:focus-visible,a:focus-visible{outline:3px solid rgba(82,109,255,.30);outline-offset:2px;}
 button,[role="button"],a{touch-action:manipulation;}
 @media (max-width:390px){
   .content{padding-left:12px;padding-right:12px;}
@@ -396,7 +394,7 @@ button,[role="button"],a{touch-action:manipulation;}
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;}
 }
 
-/* 6. Контраст: оранжевый текст и значки на светлом фоне берут затемнённый оттенок */
+/* 6. Контраст: акцентные тексты и значки на светлом фоне используют тёмный синий оттенок */
 .lnk,.pill.v,.tags .tag.new.on,.pick button.on,nav.bar button.on,
 .summary .tag.f,.up .tag.f,.dbtn.on .dw,.dbtn.on .nt{color:var(--accent-ink);}
 .lnk{padding:4px 2px;display:inline-block;}   /* ссылки «сменить» и «весь месяц»: палец попадает */
@@ -432,3 +430,59 @@ button,[role="button"],a{touch-action:manipulation;}
 .bars{height:72px;margin-top:12px;}
 .pstats{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:10px;}
 .pstats b{color:var(--text);font-weight:750;font-variant-numeric:tabular-nums;}
+
+
+/* 8. CREW 2.0 — новая визуальная система: графит, холодный белый, electric blue */
+:root{
+  --accent:#526DFF;
+  --accent-soft:#EEF1FF;
+  --accent-ink:#4058DB;
+  --bg:#F3F5FA;
+  --bg2:#FFFFFF;
+  --card:#FFFFFF;
+  --card-hi:#E9EDF5;
+  --text:#151B2B;
+  --ink:#151B2B;
+  --muted:#667085;
+  --faint:#7B8497;
+  --border:#E1E6F0;
+  --shadow:0 3px 14px rgba(24,39,75,.055);
+  --r-card:18px;
+  --r-ctl:13px;
+}
+body{background:var(--bg);color:var(--text);}
+.top{background:rgba(255,255,255,.94);border-bottom-color:rgba(225,230,240,.9);}
+.title{letter-spacing:-.025em;font-weight:850;}
+.content{scrollbar-width:none;}
+.tab{background:#F0F2F8;border-color:transparent;color:#667085;}
+.tab.on{background:#151B2B;border-color:#151B2B;color:#fff;}
+.chip{border-color:#E5E9F2;background:#fff;}
+.chip.sel{background:#526DFF;border-color:#526DFF;color:#fff;box-shadow:0 5px 14px rgba(82,109,255,.2);}
+.search{background:#fff;border-color:#E1E6F0;box-shadow:0 2px 8px rgba(24,39,75,.035);}
+.search:focus,.field input:focus,.field select:focus{border-color:#526DFF;box-shadow:0 0 0 3px rgba(82,109,255,.10);}
+.card,.panel,.row2,.confirm,.pickbig button,.dbtn,.stat{box-shadow:0 3px 14px rgba(24,39,75,.045);}
+.card{border-radius:18px;border-color:#E7EAF2;}
+.mark{border-radius:15px;background:#F8F9FC;border-color:#E1E6F0;}
+.mark.on{background:#16845B;border-color:#16845B;}
+.fab{background:#526DFF;box-shadow:0 10px 24px rgba(82,109,255,.25);border-radius:19px;}
+.btn.p,.mini-btn{background:#526DFF;box-shadow:0 6px 16px rgba(82,109,255,.16);}
+.btn.p:active,.fab:active,.mini-btn:active{transform:translateY(1px);}
+.pick button.on,.tags .tag.on,.seg button.on{background:#526DFF;border-color:#526DFF;color:#fff;}
+.sortbar button.on{color:#4058DB;background:#fff;}
+.sortbtn.on{color:#4058DB;background:#EEF1FF;border-color:#D7DEFF;}
+.dbtn.on,.pickbig button.on{background:#EEF1FF;border-color:#526DFF;}
+.dbtn.on .dw,.dbtn.on .nt{color:#4058DB;}
+.stat{background:#F8F9FC;border-color:#E8EBF3;}
+.panel{border-radius:18px;}
+.sheet{background:#F9FAFD;border-color:#E5E9F2;}
+.field input,.field select{background:#fff;border-color:#E1E6F0;}
+.tags .tag,.pick button,.seg button{border-color:#E1E6F0;}
+nav.bar{background:rgba(255,255,255,.97);border-color:#E1E6F0;}
+nav.bar button.on{background:#EEF1FF;color:#4058DB;}
+.prog i,.bars i{background:#526DFF;}
+.up.today{background:#EEF1FF;border-color:#D7DEFF;}
+button:focus-visible,input:focus-visible,select:focus-visible,[role="button"]:focus-visible,a:focus-visible{outline:3px solid rgba(82,109,255,.3);outline-offset:2px;}
+@media (prefers-color-scheme:dark){
+  /* Keep the app intentionally light and consistent across devices. */
+  :root{color-scheme:light;}
+}

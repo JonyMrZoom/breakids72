@@ -5,7 +5,7 @@
 //
 // ВАЖНО: при любом изменении файлов из SHELL увеличивайте номер в CACHE (crew-v5, crew-v6 …).
 // Тогда новый кэш собирается целиком, а старый удаляется — файлы разных версий не смешиваются.
-var CACHE = 'crew-v6';
+var CACHE = 'crew-v7';
 var SHELL = [
   './', './index.html', './styles.css', './app.js', './manifest.json',
   './assets/design-tokens.css', './assets/crew-mark.svg', './assets/crew-wordmark.svg', './assets/crew-wordmark-light.svg', './assets/empty-state.svg',
