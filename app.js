@@ -382,7 +382,7 @@ document.addEventListener('visibilitychange', function(){ if (document.visibilit
 // ======== главный экран ========
 function themeColor(){
   var m=document.querySelector('meta[name="theme-color"]');
-  if (m) m.setAttribute('content', screen==='start' ? '#F5F5F3' : (screen==='home' ? '#171717' : '#FFFFFF'));
+  if (m) m.setAttribute('content', screen==='start' ? '#F3F5FA' : (screen==='home' ? '#172033' : '#F3F5FA'));
 }
 var lastScreen=null;
 function render(){
@@ -660,7 +660,7 @@ function topbar(t, sub, br){
     '<button class="ib" onclick="openSettings()" aria-label="Настройки">'+IC.gear+'</button></div>'+(br?tabsHtml():'')+'</div>';
 }
 function initials(n){ var w=String(n).trim().split(/\s+/); return ((w[0]||'?').charAt(0)+(w[1]?w[1].charAt(0):'')).toUpperCase(); }
-var AVC=[['#ffe6db','#c2410c'],['#e8edf5','#334155'],['#fdf0cf','#92400e'],['#dff3e6','#166534'],['#efe6fb','#6b21a8'],['#dff1fa','#075985']];
+var AVC=[['#E8EDFF','#4058D8'],['#E8EDF5','#334155'],['#E7F3F5','#176B78'],['#E9F5EF','#24764F'],['#EEE9FF','#6546A5'],['#E4F0FF','#245C9A']];
 function avatar(n){ var c=AVC[(String(n).charCodeAt(0)+String(n).length)%AVC.length]; return '<div class="av" style="background:'+c[0]+';color:'+c[1]+'">'+esc(initials(n))+'</div>'; }
 
 // --- журнал оплат (для «Оплаты» и плитки на главной) ---
@@ -693,6 +693,7 @@ function monthPay(){
 
 // --- Главная ---
 function setHB(i){ hb=i; render(); }
+function homeGo(s){ if (hb>=0){ bi=hb; try{localStorage.setItem('bk72_branch',bi);}catch(e){} } go(s); }
 function homeStats(sel){
   var kids=0, grs={}, debt=0, debtN=0;
   branches().forEach(function(n,i){
@@ -735,17 +736,24 @@ function renderHome(){
     '<div class="hi">'+esc(greet())+'</div><div class="hd">'+esc(humanDate(today()))+' · '+esc(S.monthLabel)+(isOnline()?'':' · офлайн')+'</div>'+
     '<div class="hsel">'+['Все филиалы'].concat(branches()).map(function(n,i){ return '<button class="'+(i-1===hb?'on':'')+'" onclick="setHB('+(i-1)+')">'+esc(n)+'</button>'; }).join('')+'</div></div>'+
     '<div class="tiles">'+
-      tile(IC.users, st.kids, plural(st.kids,'ученик','ученика','учеников'), "go('kids')")+
-      tile(IC.cal, st.groups, plural(st.groups,'группа','группы','групп'), "go('main')")+
-      tile(IC.wallet, mp?rub(mp.total):'…', 'оплаты в этом месяце', "paySeg='log';go('pay')")+
-      tile(IC.warn, st.debtN, st.debtN?('должников · '+rub(-st.debt)):'долгов нет', "paySeg='debt';go('pay')", st.debtN?'bad':'')+
+      tile(IC.users, st.kids, plural(st.kids,'ученик','ученика','учеников'), "homeGo('kids')")+
+      tile(IC.cal, st.groups, plural(st.groups,'группа','группы','групп'), "homeGo('main')")+
+      tile(IC.wallet, mp?rub(mp.total):'…', 'оплаты в этом месяце', "paySeg='log';homeGo('pay')")+
+      tile(IC.warn, st.debtN, st.debtN?('должников · '+rub(-st.debt)):'долгов нет', "paySeg='debt';homeGo('pay')", st.debtN?'bad':'')+
     '</div>'+alertsHtml(names);
   if (nl) h+='<button class="row2" onclick="openLeads()"><div class="grow"><b>Записались на пробное</b><span>ждут зачисления в группу</span></div><i class="cnt2">'+nl+'</i>'+IC.chev+'</button>';
   var up=upcoming(hb);
-  h+='<div class="sech"><b>Ближайшие занятия</b></div>';
-  h+= up.length ? up.map(function(u){
-      return '<div class="up'+(u.iso===today()?' today':'')+'" onclick="goTrain('+u.bi+',\''+u.iso+'\')"><div class="grow"><div class="uw">'+esc(whenLbl(u.iso))+'</div><div class="us">'+esc(u.name)+' · '+u.kids+' '+plural(u.kids,'ребёнок','ребёнка','детей')+'</div></div><span class="chev">'+IC.chev+'</span></div>';
-    }).join('') : '<div class="hint" style="padding:4px 2px 12px">В этом месяце занятий больше нет.</div>';
+  h+='<div class="home-layout"><section class="home-schedule"><div class="home-section-head"><div><div class="eyebrow">ПЛАН РАБОТЫ</div><h2>Ближайшие занятия</h2></div><button class="text-action" onclick="go(&quot;sched&quot;)">Все расписание '+IC.chev+'</button></div>';
+  h+='<div class="up-list">'+(up.length ? up.map(function(u){
+      return '<div class="up'+(u.iso===today()?' today':'')+'" onclick="goTrain('+u.bi+',\''+u.iso+'\')"><div class="up-date"><span>'+esc(whenLbl(u.iso))+'</span><i></i></div><div class="grow"><div class="uw">'+esc(u.name)+'</div><div class="us">'+u.kids+' '+plural(u.kids,'ребёнок','ребёнка','детей')+'</div></div><span class="chev">'+IC.chev+'</span></div>';
+    }).join('') : '<div class="hint" style="padding:12px 2px">В этом месяце занятий больше нет.</div>')+'</div></section>';
+  h+='<aside class="home-aside"><section class="aside-card"><div class="aside-title"><div><div class="eyebrow">СТРУКТУРА CREW</div><h2>Площадки</h2></div><span class="aside-count">'+branches().length+'</span></div>';
+  h+=branches().map(function(n,i){
+    var b=S.branches[n], kids=(b&&Array.isArray(b.kids))?b.kids:[], gs={};
+    kids.forEach(function(k){ gs[k.group]=1; });
+    return '<button class="branch-row'+(hb===i?' active':'')+'" onclick="setHB('+i+')"><span class="branch-dot"></span><span class="branch-copy"><b>'+esc(n)+'</b><small>'+Object.keys(gs).length+' '+plural(Object.keys(gs).length,'группа','группы','групп')+'</small></span><strong>'+kids.length+'</strong>'+IC.chev+'</button>';
+  }).join('');
+  h+='</section><section class="aside-card quick-card"><div class="eyebrow">БЫСТРЫЙ ДОСТУП</div><h2>Что делаем?</h2><button class="quick-action" onclick="homeGo(&quot;main&quot;)">'+IC.cal+'<span>Отметить посещаемость</span>'+IC.chev+'</button><button class="quick-action" onclick="homeGo(&quot;kids&quot;)">'+IC.users+'<span>Открыть учеников</span>'+IC.chev+'</button><button class="quick-action" onclick="paySeg=&quot;debt&quot;;homeGo(&quot;pay&quot;)">'+IC.wallet+'<span>Проверить задолженности</span>'+IC.chev+'</button></section></aside></div>';
   $('app').innerHTML=h+'</div>'+navHtml('home');
 }
 

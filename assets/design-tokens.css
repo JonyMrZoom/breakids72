@@ -1,18 +1,18 @@
-/* CREW 2.0 — cool graphite / electric blue */
+/* CREW design system — graphite, cool white and electric blue */
 :root {
   --crew-bg: #F3F5FA;
   --crew-surface: #FFFFFF;
-  --crew-surface-muted: #E9EDF5;
-  --crew-ink: #151B2B;
-  --crew-muted: #667085;
-  --crew-border: #E1E6F0;
+  --crew-surface-muted: #EEF1F7;
+  --crew-ink: #172033;
+  --crew-muted: #6F7890;
+  --crew-border: #E3E8F1;
   --crew-accent: #526DFF;
   --crew-accent-soft: #EEF1FF;
   --crew-success: #16845B;
-  --crew-success-soft: #E7F6EF;
+  --crew-success-soft: #E8F6EF;
   --crew-danger: #C83D4D;
-  --crew-danger-soft: #FDECEF;
+  --crew-danger-soft: #FCEDEF;
   --crew-radius-card: 18px;
-  --crew-radius-control: 13px;
-  --crew-shadow-card: 0 3px 14px rgba(24, 39, 75, .055);
+  --crew-radius-control: 12px;
+  --crew-shadow-card: 0 4px 16px rgba(27, 39, 67, .055);
 }

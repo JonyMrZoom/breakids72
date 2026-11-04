@@ -3,9 +3,9 @@
 // подтягивается в фоне. Данные таблицы (запросы к Google Apps Script) здесь не кэшируются никогда:
 // они идут POST на другой домен. Офлайн-копия данных хранится самим приложением на устройстве.
 //
-// ВАЖНО: при любом изменении файлов из SHELL увеличивайте номер в CACHE (crew-v5, crew-v6 …).
+// ВАЖНО: при любом изменении файлов из SHELL увеличивайте номер в CACHE (crew-v5, crew-v6, crew-v7, crew-v8, crew-v9 …).
 // Тогда новый кэш собирается целиком, а старый удаляется — файлы разных версий не смешиваются.
-var CACHE = 'crew-v7';
+var CACHE = 'crew-v9';
 var SHELL = [
   './', './index.html', './styles.css', './app.js', './manifest.json',
   './assets/design-tokens.css', './assets/crew-mark.svg', './assets/crew-wordmark.svg', './assets/crew-wordmark-light.svg', './assets/empty-state.svg',
