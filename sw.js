@@ -1,24 +1,34 @@
 // CREW — service worker.
-// Приложение открывается мгновенно из кэша (в том числе без интернета),
-// а свежая версия файлов подтягивается в фоне и применяется при следующем запуске.
-// Данные таблицы (запросы к Google Apps Script) не кэшируются никогда — они идут POST на другой домен.
-var CACHE = 'crew-v3';
-var SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-512-maskable.png', './apple-touch-icon.png'];
+// Приложение открывается мгновенно из кэша (в том числе без интернета), а свежая версия файлов
+// подтягивается в фоне. Данные таблицы (запросы к Google Apps Script) здесь не кэшируются никогда:
+// они идут POST на другой домен. Офлайн-копия данных хранится самим приложением на устройстве.
+//
+// ВАЖНО: при любом изменении файлов из SHELL увеличивайте номер в CACHE (crew-v5, crew-v6 …).
+// Тогда новый кэш собирается целиком, а старый удаляется — файлы разных версий не смешиваются.
+var CACHE = 'crew-v5';
+var SHELL = [
+  './', './index.html', './styles.css', './app.js', './manifest.json',
+  './assets/design-tokens.css', './assets/crew-mark.svg', './assets/crew-wordmark.svg', './assets/crew-wordmark-light.svg', './assets/empty-state.svg',
+  './icon-192.png', './icon-512.png', './icon-512-maskable.png', './apple-touch-icon.png'
+];
 
 self.addEventListener('install', function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).catch(function () {}));
+  // addAll атомарен: если хоть один файл не скачался, новая версия не ставится и работает прежняя
+  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }));
   self.skipWaiting();
 });
 
 self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (keys) {
-    return Promise.all(keys.filter(function (k) { return k !== CACHE; }).map(function (k) { return caches.delete(k); }));
+    var hadOld = keys.some(function (k) { return k !== CACHE; });
+    return Promise.all(keys.filter(function (k) { return k !== CACHE; }).map(function (k) { return caches.delete(k); }))
+      .then(function () { return self.clients.claim(); })
+      .then(function () { if (hadOld) notify(); });     // обновление: открытое приложение предложит «Обновить»
   }));
-  self.clients.claim();
 });
 
 // cache-first + фоновое обновление: экран появляется сразу, файлы обновляются следом.
-// Если главная страница в сети отличается от закэшированной — сообщаем приложению, оно предложит «Обновить».
+// Если главная страница в сети отличается от закэшированной — сообщаем приложению.
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
   var url = new URL(e.request.url);
