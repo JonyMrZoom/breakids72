@@ -270,6 +270,8 @@ var IC = {
   check:'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
   plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  down:'<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>',
+  sort:'<svg viewBox="0 0 24 24"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg>',
   home:'<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>',
   cal:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
   users:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.4 0 4 1.8 4 4.5"/></svg>',
@@ -540,14 +542,17 @@ function summary(b){
   var mark = s===today() ? '<span class="tag g">сегодня</span>' : (s>today() ? '<span class="tag f">ещё не прошла</span>' : '<span class="tag w">другой день</span>');
   var qn = queueCount();
   if (!isOnline() || qn) mark += '<span class="tag off">'+(isOnline()?'':'офлайн')+(qn?(isOnline()?'':' · ')+qn+' ждут':'')+'</span>';
-  return '<div class="summary"><span>'+DOW[d.getDay()].toLowerCase()+', '+d.getDate()+' '+GEN[d.getMonth()]+' '+mark+
-    ' <a href="#" class="lnk" onclick="openStart(bi);return false;">сменить</a> · <a href="#" class="lnk" onclick="go(\'sched\');return false;">весь месяц</a></span>'+
-    '<span>пришли <b>'+n+'</b> из '+b.kids.length+'</span></div>'+
+  return '<div class="summary">'+
+    '<button class="datebtn" onclick="openStart(bi)" aria-label="Сменить филиал или дату">'+DOW[d.getDay()].toLowerCase()+', '+d.getDate()+' '+GEN[d.getMonth()]+IC.down+'</button>'+
+    mark+'<span class="came">пришли <b>'+n+'</b> из '+b.kids.length+'</span></div>'+
     (s<=today()&&b.kids.length?'<div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="'+b.kids.length+'" aria-valuenow="'+n+'"><i style="width:'+Math.round(n/b.kids.length*100)+'%"></i></div>':'');
 }
 var AWAY = 4;                       // столько пропущенных подряд = «давно не было»
 var sortMode = 'sheet';          // по умолчанию порядок спокойный, никто не «прыгает»
-function setSort(m){ sortMode=m; render(); }   // режим не запоминается: после перезапуска — снова обычный порядок
+var showSort = false;            // переключатель порядка открывается по кнопке и не занимает строку постоянно
+function toggleSort(){ showSort=!showSort; render(); }
+var SORTNAME = {sheet:'', visits:'по посещаемости', debt:'только долги'};
+function setSort(m){ sortMode=m; showSort=false; render(); }   // режим не запоминается: после перезапуска — снова обычный порядок
 function away(k){ return (k.missed||0) >= AWAY; }
 function sortKids(a){
   if (sortMode!=='visits') return a;
@@ -577,9 +582,12 @@ function list(b){
   var pool=gf?b.kids.filter(function(k){ return k.group===gf; }):b.kids;
   var act=pool.filter(function(k){ return !away(k); }), gone=pool.filter(away);
   var debts=pool.filter(function(k){ return k.remainder<0; });
-  var h=gchips(b.kids)+'<div class="sortbar"><button class="'+(sortMode==='sheet'?'on':'')+'" onclick="setSort(\'sheet\')">Свой порядок</button>'+
+  var h='<div class="filterrow">'+gchips(b.kids)+
+      '<button class="sortbtn'+(sortMode!=='sheet'?' on':'')+(showSort?' open':'')+'" onclick="toggleSort()" aria-expanded="'+(showSort?'true':'false')+'" aria-label="Порядок списка">'+
+      IC.sort+(SORTNAME[sortMode]?'<span>'+SORTNAME[sortMode]+'</span>':'')+'</button></div>'+
+    (showSort?('<div class="sortbar"><button class="'+(sortMode==='sheet'?'on':'')+'" onclick="setSort(\'sheet\')">Свой порядок</button>'+
         '<button class="'+(sortMode==='visits'?'on':'')+'" onclick="setSort(\'visits\')">Посещаемость</button>'+
-        '<button class="'+(sortMode==='debt'?'on':'')+'" onclick="setSort(\'debt\')">Долги'+(debts.length?' <b>'+debts.length+'</b>':'')+'</button></div>';
+        '<button class="'+(sortMode==='debt'?'on':'')+'" onclick="setSort(\'debt\')">Долги'+(debts.length?' <b>'+debts.length+'</b>':'')+'</button></div>'):'');
   if (sortMode==='debt'){
     if (!debts.length) return h+'<div class="empty"><h3>Долгов нет</h3>У всех детей баланс в плюсе или в нуле.</div>';
     var dk=debts.slice().sort(function(x,y){ return x.remainder-y.remainder; });
@@ -781,7 +789,14 @@ function renderPay(){
     else {
       var max=0, i; for(i=1;i<=mp.days;i++) if (mp.by[i]>max) max=mp.by[i];
       var ax=[1,8,15,22,mp.days].filter(function(v,j,a){ return a.indexOf(v)===j && v<=mp.days; });
-      h+='<div class="big">'+rub(mp.total)+'</div><div class="bigs">Поступления за месяц · '+mp.list.length+' '+plural(mp.list.length,'оплата','оплаты','оплат')+'</div>'+
+      var single=mp.list.filter(function(r){ return /разов/i.test(String(r.type)); }).length, abon=mp.list.length-single;
+      var avg=mp.list.length?Math.round(mp.total/mp.list.length):0;
+      var days=0; for(i=1;i<=mp.days;i++) if (mp.by[i]) days++;
+      h+='<div class="big">'+rub(mp.total)+'</div><div class="bigs">Поступления за '+esc(S.monthLabel.toLowerCase())+'</div>'+
+        '<div class="pstats">'+mp.list.length+' '+plural(mp.list.length,'оплата','оплаты','оплат')+
+        ' · в среднем <b>'+rub(avg)+'</b> · '+abon+' '+plural(abon,'абонемент','абонемента','абонементов')+
+        (single?(', '+single+' '+plural(single,'разовое','разовых','разовых')):'')+
+        ' · '+days+' '+plural(days,'день','дня','дней')+' с оплатами</div>'+
         '<div class="bars">'+(function(){ var s=''; for(var d=1;d<=mp.days;d++) s+='<i class="'+(mp.by[d]?'':'z')+'" style="height:'+(mp.by[d]&&max?Math.max(8,Math.round(mp.by[d]/max*100)):4)+'%" title="'+d+': '+rub(mp.by[d])+'"></i>'; return s; })()+'</div>'+
         '<div class="axis">'+ax.map(function(d){ return '<span>'+d+'</span>'; }).join('')+'</div>'+
         '<div class="sech"><b>Последние оплаты</b></div>';
