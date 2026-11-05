@@ -748,3 +748,96 @@ button:focus-visible,input:focus-visible,select:focus-visible,[role="button"]:fo
   .home-aside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:14px;}
   .up-list{grid-template-columns:repeat(2,minmax(0,1fr));}
 }
+
+/* ===== 2.5: задачи на главной ===== */
+.home-tasks{margin:6px 0 14px;}
+.row2.task>svg:first-child{stroke:var(--accent);}
+.row2.task.bad>svg:first-child{stroke:var(--bad);}
+.row2.task.bad b{color:var(--bad);}
+.tile.accent b{color:var(--accent);} .tile.accent svg{stroke:var(--accent);}
+.tcard{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);}
+.tcard:last-of-type{border-bottom:0;}
+.tcard .main{flex:1;min-width:0;}
+.tcard .nm{font-weight:750;font-size:15px;}
+.tact{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.mini-btn.ghost{background:var(--accent-soft);color:var(--accent);display:inline-flex;align-items:center;gap:6px;text-decoration:none;}
+.mini-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.tstats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;}
+.tstats div{background:var(--card-hi,#f4f6fa);border-radius:14px;padding:12px;}
+.tstats b{display:block;font-size:24px;font-weight:850;}
+.tstats span{font-size:12px;color:var(--muted);line-height:1.35;}
+
+/* =====================================================================
+   CREW 2.6 — спокойная палитра.
+   Основа: графит + нейтральный светло-серый. Выбранное и кнопки — графит.
+   Фирменный красный апельсин (--brand) — только маленькие акценты:
+   косая черта логотипа, метка активной вкладки, «сегодня», счётчики.
+   Селекторы с «html body» перекрывают все прежние слои стилей.
+   ===================================================================== */
+:root{
+  --bg:#F4F5F7; --bg2:#FFFFFF; --card:#FFFFFF; --card-hi:#EEEFF2;
+  --text:#1E2228; --ink:#1E2228; --muted:#6B717C; --faint:#8D939D;
+  --accent:#2A2E35; --accent-soft:#EEEFF2; --accent-ink:#2A2E35;
+  --brand:#F04E23; --brand-soft:#FDEDE7;
+  --good:#2E7D57; --good-soft:#E8F2EC; --bad:#B93A32; --bad-soft:#FAECEA;
+  --border:#E5E7EB; --shadow:0 1px 2px rgba(30,34,40,.04),0 4px 14px rgba(30,34,40,.04);
+  --hero:#24272D;
+}
+html body{background:var(--bg);color:var(--text);}
+html body button:focus-visible,html body input:focus-visible,html body select:focus-visible,html body [role="button"]:focus-visible,html body a:focus-visible{outline:3px solid rgba(240,78,35,.35);outline-offset:2px;}
+
+/* главная: ровный графитовый блок без пятен и градиентов */
+html body .hero{background:var(--hero);box-shadow:none;}
+html body .hero::before,html body .hero::after{display:none;}
+html body .hd{color:#A7ADB7;}
+html body .hsel button{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#E6E8EC;box-shadow:none;}
+html body .hsel button:hover{background:rgba(255,255,255,.12);}
+html body .hsel button.on{background:#FFFFFF;border-color:#FFFFFF;color:var(--ink);box-shadow:none;}
+html body .hero .ib.dk{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);}
+
+/* плитки и цифры */
+html body .tile b{color:var(--ink);}
+html body .tile.accent b{color:var(--ink);} html body .tile.accent svg{stroke:var(--brand);}
+html body .tile.bad b{color:var(--bad);} html body .tile.bad svg{stroke:var(--bad);}
+
+/* выбранное: графит, без цветных теней */
+html body .chip.sel,html body .tab.on,html body .seg button.on,html body .tags .tag.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:none;}
+html body .btn.p,html body .fab,html body .mini-btn{background:var(--accent);box-shadow:none;}
+html body .mini-btn.ghost{background:var(--accent-soft);color:var(--ink);}
+html body .pickbig button.on,html body .dbtn.on{border-color:var(--ink);background:#fff;box-shadow:0 0 0 1px var(--ink) inset;}
+html body .pickbig button.on .rad{border-color:var(--ink);} html body .pickbig button.on .rad::after{background:var(--ink);}
+html body .dbtn.on .dw,html body .dbtn.on .nt{color:var(--ink);}
+html body .pill.v{background:var(--accent-soft);color:var(--ink);}
+html body .lnk,html body .text-action{color:var(--ink);}
+html body .row2.task>svg:first-child{stroke:var(--ink);}
+html body .row2.task.bad>svg:first-child{stroke:var(--bad);}
+
+/* отметка «был» — спокойный зелёный */
+html body .mark.on{background:var(--good);border-color:var(--good);}
+
+/* «сегодня» и активное — маленькая метка фирменного цвета */
+html body .chip.today::after{background:var(--brand);}
+html body .up.today{background:#fff;border-color:var(--border);box-shadow:inset 3px 0 0 var(--brand),var(--shadow);}
+html body .up-date{color:var(--ink);}
+html body .up-date i{background:var(--border);}
+html body .up.today .up-date i{background:var(--brand);}
+html body nav.bar button.on{color:var(--ink);}
+html body nav.bar button.on svg{stroke:var(--ink);}
+html body nav.bar .nb,html body .cnt2{background:var(--brand);color:#fff;}
+html body .aside-count{background:var(--accent-soft);color:var(--ink);}
+html body .branch-row:hover,html body .branch-row.active{background:var(--card-hi);}
+html body .branch-row.active .branch-dot{background:var(--brand);box-shadow:0 0 0 4px var(--brand-soft);}
+html body .quick-action:hover{color:var(--ink);background:var(--card-hi);}
+
+/* телефон: тонкая метка над активной вкладкой */
+@media (max-width:899px){
+  html body nav.bar button.on::before{content:"";position:absolute;top:-5px;width:26px;height:3px;border-radius:3px;background:var(--brand);}
+}
+/* компьютер: боковое меню, активный пункт — светлая подложка и метка слева */
+@media (min-width:900px){
+  html body nav.bar button.on{background:var(--card-hi);color:var(--ink);box-shadow:inset 3px 0 0 var(--brand);}
+  html body nav.bar button:hover:not(.on){background:#F7F8F9;color:var(--ink);}
+}
+html body .tile svg{stroke:var(--muted);}
+html body .chev svg,html body .branch-row>svg,html body .quick-action>svg:last-child{stroke:#A3A8B0;}
+html body .quick-action>svg:first-child{stroke:var(--muted);}

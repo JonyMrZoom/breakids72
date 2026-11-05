@@ -2,6 +2,26 @@
 var API = null;
 var KEY = '';
 try { API = localStorage.getItem('bk72_apiUrl'); KEY = localStorage.getItem('bk72_key') || ''; } catch (e) {}
+// Режим тренера: только проведение занятия и отметки. Включается ссылкой вида …/#coach=<код>,
+// которую руководитель берёт в Настройках. Ограничения проверяет и сервер (по ключу тренера).
+var COACH = false;
+try { COACH = localStorage.getItem('bk72_role') === 'coach'; } catch (e) {}
+(function(){
+  var m = String(location.hash||'').match(/coach=([A-Za-z0-9_\-]+)/);
+  if (!m) return;
+  var o = null;
+  try { var b = m[1].replace(/-/g,'+').replace(/_/g,'/'); while (b.length%4) b+='='; o = JSON.parse(atob(b)); } catch (e) {}
+  if (!o || !/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(o.u||'') || !o.k) return;
+  if (COACH && API===o.u && KEY===o.k) return;                               // уже настроено этой же ссылкой
+  if (API && !COACH && KEY && KEY!==o.k &&
+      !confirm('Это ссылка для тренера. Переключить это устройство в режим тренера?\n\nПолный доступ на этом устройстве отключится — вернуть его можно, введя адрес и ключ в настройках.')) return;
+  API = o.u; KEY = o.k; COACH = true;
+  try {
+    localStorage.setItem('bk72_apiUrl', API); localStorage.setItem('bk72_key', KEY); localStorage.setItem('bk72_role', 'coach');
+    ['bk72_data','bk72_session','bk72_paylog'].forEach(function(k){ localStorage.removeItem(k); });   // чужие данные не показываем
+  } catch (e) {}
+})();
+function coachMin(){ return addDays(today(), -1); }                 // тренер отмечает сегодня и вчера (как и сервер)
 var QUEUEABLE = { setAttendance:1, addPayment:1, updateChild:1, addLead:1, addChild:1, moveChild:1, deleteLead:1, convertLead:1 };   // что можно отложить до интернета
 var netDown = false;        // последний запрос не дошёл: считаем, что связи нет, и больше не ждём таймаутов
 var retryDelay = 8000;      // пауза между попытками восстановить связь (растёт до минуты)
@@ -270,7 +290,8 @@ var MONTHS = ['Январь','Февраль','Март','Апрель','Май'
 var GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 var IC = {
   refresh:'<svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>',
-  gear:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>',
+  gear:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  link:'<svg viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3.2-3.2a4.5 4.5 0 0 0-6.4-6.4L12 5.6"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3.2 3.2a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2"/></svg>',
   back:'<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>',
   check:'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
   plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
@@ -283,7 +304,11 @@ var IC = {
   wallet:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/></svg>',
   more:'<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
   chev:'<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>',
-  warn:'<svg viewBox="0 0 24 24"><path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg>'
+  warn:'<svg viewBox="0 0 24 24"><path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg>',
+  task:'<svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M8.5 9.5l1.7 1.7 3.3-3.4M8.5 15.5h7"/></svg>',
+  phone:'<svg viewBox="0 0 24 24"><path d="M6.6 3.5h3l1.5 4-2 1.3a11 11 0 0 0 6.1 6.1l1.3-2 4 1.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z"/></svg>',
+  mega:'<svg viewBox="0 0 24 24"><path d="M4 10v4h3l7 4V6L7 10z"/><path d="M17.5 9a4 4 0 0 1 0 6"/></svg>',
+  shirt:'<svg viewBox="0 0 24 24"><path d="M8.5 4L4 6.5l1.8 4L8 9.6V20h8V9.6l2.2.9 1.8-4L15.5 4a3.5 3.5 0 0 1-7 0z"/></svg>'
 };
 
 function $(id){ return document.getElementById(id); }
@@ -310,6 +335,8 @@ document.addEventListener('focus', function(e){ if(isTel(e.target) && !e.target.
 document.addEventListener('blur', function(e){ if(isTel(e.target) && e.target.value.replace(/\D/g,'').length<2) e.target.value=''; }, true);
 function today(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function lbl(iso){ return iso.slice(8,10)+'.'+iso.slice(5,7); }
+/** Сдвиг даты 'yyyy-mm-dd' на n дней без часовых поясов. */
+function addDays(iso, n){ var p=String(iso).split('-'), t=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]+n)); return t.getUTCFullYear()+'-'+pad(t.getUTCMonth()+1)+'-'+pad(t.getUTCDate()); }
 /** День недели даты 'yyyy-mm-dd' без часовых поясов. */
 function isoDow(iso){ var p=String(iso).split('-'); return DOW[new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay()]; }
 function rub(n){ return (Number(n)||0).toLocaleString('ru-RU')+' ₽'; }
@@ -389,7 +416,7 @@ document.addEventListener('visibilitychange', function(){ if (document.visibilit
 // ======== главный экран ========
 function themeColor(){
   var m=document.querySelector('meta[name="theme-color"]');
-  if (m) m.setAttribute('content', screen==='start' ? '#F3F5FA' : (screen==='home' ? '#172033' : '#F3F5FA'));
+  if (m) m.setAttribute('content', screen==='home' ? '#24272D' : '#F4F5F7');
 }
 var lastScreen=null;
 function render(){
@@ -431,6 +458,7 @@ document.addEventListener('keydown', function(ev){
 });
 function renderInner(){
   themeColor();
+  if (COACH && screen!=='settings' && screen!=='start' && screen!=='main') screen='main';
   if (screen==='settings') return renderSettings();
   if (screen==='start' && S && S.configured) return renderStart();
   if (screen==='start') screen='main';
@@ -442,12 +470,13 @@ function renderInner(){
     else if (screen==='pay') return renderPay();
     else if (screen==='more') return renderMore();
     else if (screen==='sched') return renderSched();
+    else if (screen==='tasks') return renderTasks();
   }
   var c=document.querySelector('.content'), y=c?c.scrollTop:0, st=document.querySelector('.strip'), x=st?st.scrollLeft:null;
   var ae=document.activeElement, keepQ=(ae && ae.id==='q') ? [ae.selectionStart, ae.selectionEnd] : null;   // не терять поиск, пока человек печатает
   var tabs=tabsHtml();
   var h='<div class="top"><div class="row"><div class="logo"><img src="assets/crew-mark.svg" alt=""></div>'+
-    '<div class="grow"><div class="title"><img class="wmimg" src="assets/crew-wordmark.svg" alt="CREW"></div><div class="sub">'+(S&&S.configured?esc(S.monthLabel):'не подключено')+'</div></div>'+
+    '<div class="grow"><div class="title"><img class="wmimg" src="assets/crew-wordmark.svg" alt="CREW"></div><div class="sub">'+(S&&S.configured?esc(S.monthLabel)+(COACH?' · режим тренера':''):'не подключено')+'</div></div>'+
     '<button class="ib" onclick="openSettings()" aria-label="Настройки">'+IC.gear+'</button></div>'+
     tabs+'</div>';
 
@@ -466,7 +495,7 @@ function renderInner(){
     // кнопки «+» здесь нет намеренно: плавающая кнопка перекрывала бы собой отметку одного из детей.
     // Добавить ребёнка можно на вкладке «Ученики».
   }
-  if (S && S.configured) h+=navHtml('main');
+  if (S && S.configured && !COACH) h+=navHtml('main');
   $('app').innerHTML=h;
   filter();
   c=document.querySelector('.content'); if(c) c.scrollTop=y;
@@ -483,6 +512,7 @@ function tabsHtml(){
 }
 /** Таблица отстала от реального месяца (на случай, если сервер сам этого не пометил). */
 function monthBehind(){
+  if (COACH) return false;
   if (S.monthBehind) return true;
   if (!S.month) return false;
   var n=new Date();
@@ -507,7 +537,7 @@ function calendarProblem(d, name){
 }
 function calKey(name, p){ return 'bk72_calok_'+S.month.year+'-'+S.month.monthIdx+'_'+name+'_'+p.missing.join(',')+'|'+p.extra.join(','); }
 function calWarn(name){
-  if (!S || !S.configured) return '';
+  if (!S || !S.configured || COACH) return '';
   var p=calendarProblem(S, name); if (!p) return '';
   try{ if (localStorage.getItem(calKey(name,p))) return ''; }catch(e){}
   var parts=[];
@@ -569,8 +599,8 @@ function kidCard(k, s){
   var on=!!k.attendance[s], future=s>today();
   if (k.pendingNew) return '<div class="card" data-n="'+esc(k.name.toLowerCase())+'"><div class="main"><div class="nm">'+esc(k.name)+'</div>'+
     '<div class="meta"><span class="pill miss">ждёт отправки в таблицу</span></div></div></div>';
-  return '<div class="card" data-n="'+esc(k.name.toLowerCase())+'"><div class="main" onclick="openKid(\''+k.id+'\')"><div class="nm">'+esc(k.name)+'</div>'+
-    '<div class="meta"><span class="pill v">'+k.visits+' зан.</span><span class="pill '+money(k.remainder)+'">'+srub(k.remainder)+'</span>'+
+  return '<div class="card" data-n="'+esc(k.name.toLowerCase())+'"><div class="main"'+(COACH?'':' onclick="openKid(\''+k.id+'\')"')+'><div class="nm">'+esc(k.name)+'</div>'+
+    '<div class="meta"><span class="pill v">'+k.visits+' зан.</span>'+(COACH?'':'<span class="pill '+money(k.remainder)+'">'+srub(k.remainder)+'</span>')+
     (away(k)?'<span class="pill miss">'+k.missed+' '+plural(k.missed,'пропуск','пропуска','пропусков')+' подряд</span>':'')+'</div></div>'+
     '<button class="mark'+(on?' on':'')+(future&&!on?' future':'')+(on&&isArmed(k.id,s)?' armed':'')+'" data-k="'+esc(markKey(k.id,s))+'" onclick="toggle(\''+k.id+'\',\''+s+'\')" aria-label="'+(on?'Снять отметку (нажать дважды)':'Отметить')+'">'+(isArmed(k.id,s)?IC.x:IC.check)+'</button></div>';
 }
@@ -584,7 +614,7 @@ function gchips(kids){
 }
 function setGF(n){ gf=n; render(); }
 function list(b){
-  if (!b.kids.length) return '<div class="empty"><h3>Пока нет детей</h3>Добавьте первого на вкладке «Ученики».<button class="btn p" style="max-width:260px;margin:16px auto 0" onclick="go(\'kids\')">Открыть «Ученики»</button></div>';
+  if (!b.kids.length) return COACH ? '<div class="empty"><h3>Пока нет детей</h3>В этом филиале ещё нет учеников.</div>' : '<div class="empty"><h3>Пока нет детей</h3>Добавьте первого на вкладке «Ученики».<button class="btn p" style="max-width:260px;margin:16px auto 0" onclick="go(\'kids\')">Открыть «Ученики»</button></div>';
   var s=curIso();
   var pool=gf?b.kids.filter(function(k){ return k.group===gf; }):b.kids;
   var act=pool.filter(function(k){ return !away(k); }), gone=pool.filter(away);
@@ -594,7 +624,7 @@ function list(b){
       IC.sort+(SORTNAME[sortMode]?'<span>'+SORTNAME[sortMode]+'</span>':'')+'</button></div>'+
     (showSort?('<div class="sortbar"><button class="'+(sortMode==='sheet'?'on':'')+'" onclick="setSort(\'sheet\')">Свой порядок</button>'+
         '<button class="'+(sortMode==='visits'?'on':'')+'" onclick="setSort(\'visits\')">Посещаемость</button>'+
-        '<button class="'+(sortMode==='debt'?'on':'')+'" onclick="setSort(\'debt\')">Долги'+(debts.length?' <b>'+debts.length+'</b>':'')+'</button></div>'):'');
+        (COACH?'':'<button class="'+(sortMode==='debt'?'on':'')+'" onclick="setSort(\'debt\')">Долги'+(debts.length?' <b>'+debts.length+'</b>':'')+'</button>')+'</div>'):'');
   if (sortMode==='debt'){
     if (!debts.length) return h+'<div class="empty"><h3>Долгов нет</h3>У всех детей баланс в плюсе или в нуле.</div>';
     var dk=debts.slice().sort(function(x,y){ return x.remainder-y.remainder; });
@@ -614,10 +644,10 @@ function list(b){
     h+='<div class="grp away"><div class="gh"><span>Давно не было</span><span>'+gone.length+'</span></div>'+
       '<div class="hint" style="padding:0 2px 8px">Пропустили '+AWAY+' тренировки подряд и больше — это примерно две недели.</div>'+
       gk.map(function(k){
-        return '<div class="card" data-n="'+esc(k.name.toLowerCase())+'"><div class="main" onclick="openKid(\''+k.id+'\')"><div class="nm">'+esc(k.name)+'</div>'+
+        return '<div class="card" data-n="'+esc(k.name.toLowerCase())+'"><div class="main"'+(COACH?'':' onclick="openKid(\''+k.id+'\')"')+'><div class="nm">'+esc(k.name)+'</div>'+
           '<div class="meta"><span class="pill miss">'+k.missed+' подряд</span>'+
           '<span class="pill v">'+(k.lastVisit?('был '+lbl(k.lastVisit)):'не был')+'</span>'+
-          '<span class="pill '+money(k.remainder)+'">'+srub(k.remainder)+'</span>'+
+          (COACH?'':'<span class="pill '+money(k.remainder)+'">'+srub(k.remainder)+'</span>')+
           '<span class="pill grp">'+esc(k.group)+'</span></div></div>'+
           '<button class="mark'+(k.attendance[s]?' on':'')+(k.attendance[s]&&isArmed(k.id,s)?' armed':'')+'" data-k="'+esc(markKey(k.id,s))+'" onclick="toggle(\''+k.id+'\',\''+s+'\')" aria-label="'+(k.attendance[s]?'Снять отметку (нажать дважды)':'Отметить')+'">'+(isArmed(k.id,s)?IC.x:IC.check)+'</button></div>';
       }).join('')+'</div>';
@@ -648,7 +678,7 @@ function moveKid(id, dir){
 }
 
 // ======== новая навигация и экраны ========
-function branchScreen(s){ return s==='main'||s==='home'||s==='kids'||s==='pay'||s==='sched'; }
+function branchScreen(s){ return s==='main'||s==='home'||s==='kids'||s==='pay'||s==='sched'||s==='tasks'; }
 function navHtml(active){
   var n=activeLeads().length;
   var it=[['home','Главная',IC.home],['main','Отметки',IC.cal],['kids','Ученики',IC.users],['pay','Оплаты',IC.wallet],['more','Ещё',IC.more]];
@@ -657,6 +687,7 @@ function navHtml(active){
   }).join('')+'</nav>';
 }
 function go(s){
+  if (COACH && s!=='main' && s!=='start') s='main';           // тренеру доступны только отметки
   closeSheet(); if (screen!==s) q='';
   screen=s; render();
   if (s==='home'||s==='pay') loadPayLog();
@@ -701,15 +732,129 @@ function monthPay(){
 // --- Главная ---
 function setHB(i){ hb=i; render(); }
 function homeGo(s){ if (hb>=0){ bi=hb; try{localStorage.setItem('bk72_branch',bi);}catch(e){} } go(s); }
+var GOES_DAYS = 28;                 // «ходит» = был хотя бы раз за последние 4 недели
+/** Ходит ли ребёнок: была отметка за последние 4 недели (этот месяц + прошлый из архива). */
+function goes(k){
+  var t=today(), lim=addDays(t,-GOES_DAYS);
+  var hit=function(iso){ return iso>lim && iso<=t; };
+  return Object.keys(k.attendance||{}).some(hit) || (k.hist||[]).some(hit);
+}
 function homeStats(sel){
-  var kids=0, grs={}, debt=0, debtN=0;
+  var kids=0, go=0, debt=0, debtN=0;
   branches().forEach(function(n,i){
     if (sel>=0 && sel!==i) return;
     var b=S.branches[n]; if(!b||b.error) return;
-    b.kids.forEach(function(k){ kids++; grs[n+'|'+k.group]=1; if (k.remainder<0){ debt+=k.remainder; debtN++; } });
+    b.kids.forEach(function(k){ if (k.pendingNew) return; kids++; if (goes(k)) go++; if (k.remainder<0){ debt+=k.remainder; debtN++; } });
   });
-  return {kids:kids, groups:Object.keys(grs).length, debt:debt, debtN:debtN};
+  return {kids:kids, goes:go, debt:debt, debtN:debtN};
 }
+
+// --- Задачи: появляются сами по данным таблицы ---
+var CALL_SNOOZE = 14, ADS_SNOOZE = 30, ADS_DROP = 0.15, SHIRT_DAYS = 365;
+function tstate(){ var t=(S&&S.tasks)||{}; t.call=t.call||{}; t.shirt=t.shirt||{}; t.ads=t.ads||''; if(S) S.tasks=t; return t; }
+/** Средняя посещаемость: последние 4 недели против 4 недель до них. */
+function attTrend(sel){
+  var t=today(), a1=addDays(t,-28), a0=addDays(t,-56), now=[], was=[];
+  branches().forEach(function(n,i){
+    if (sel>=0 && sel!==i) return;
+    var b=S.branches[n]; if(!b||b.error) return;
+    (b.sessions||[]).forEach(function(x){ if (x.iso>a1 && x.iso<=t) now.push(x.n); else if (x.iso>a0 && x.iso<=a1) was.push(x.n); });
+  });
+  var avg=function(a){ return a.length ? a.reduce(function(s,x){ return s+x; },0)/a.length : 0; };
+  return {now:avg(now), was:avg(was), nNow:now.length, nWas:was.length, drop: (was.length && avg(was)) ? 1-avg(now)/avg(was) : 0};
+}
+function homeTasks(sel){
+  var T=tstate(), t=today(), out=[], calls=[], shirts=[];
+  branches().forEach(function(n,i){
+    if (sel>=0 && sel!==i) return;
+    var b=S.branches[n]; if(!b||b.error) return;
+    var gs={};
+    b.kids.forEach(function(k){
+      if (k.pendingNew) return;
+      gs[k.group]=1;
+      if (k.missed>=AWAY && !(T.call[k.id] && T.call[k.id]>addDays(t,-CALL_SNOOZE))) calls.push({k:k, branch:n});
+    });
+    Object.keys(gs).forEach(function(g){ var key=n+'|'+g, d=T.shirt[key]; if (!d || d<=addDays(t,-SHIRT_DAYS)) shirts.push({key:key, branch:n, group:g, last:d||''}); });
+  });
+  if (calls.length){
+    calls.sort(function(x,y){ return (y.k.missed-x.k.missed) || x.k.name.localeCompare(y.k.name,'ru'); });
+    out.push({type:'call', ic:IC.phone, title:'Обзвонить '+calls.length+' '+plural(calls.length,'ребёнка','детей','детей'),
+      sub:'не были '+AWAY+' и больше занятий подряд', items:calls});
+  }
+  var tr=attTrend(sel);
+  if (tr.nNow>=2 && tr.nWas>=2 && tr.drop>=ADS_DROP && !(T.ads && T.ads>addDays(t,-ADS_SNOOZE))){
+    out.push({type:'ads', ic:IC.mega, title:'Заказать рекламу', bad:true,
+      sub:'посещаемость упала на '+Math.round(tr.drop*100)+'%: '+tr.now.toFixed(1).replace('.',',')+' вместо '+tr.was.toFixed(1).replace('.',',')+' детей на занятии', trend:tr});
+  }
+  if (shirts.length){
+    out.push({type:'shirt', ic:IC.shirt, title:'Сделать футболки', sub:shirts.length+' '+plural(shirts.length,'группа','группы','групп')+' · раз в год', items:shirts});
+  }
+  return out;
+}
+/** Экран «Задачи»: открывается плиткой на главной и из «Ещё». */
+function renderTasks(){
+  var list=homeTasks(hb);
+  var h='<div class="top"><div class="row"><button class="ib" onclick="go(\'home\')" aria-label="Назад">'+IC.back+'</button>'+
+    '<div class="grow"><div class="title">Задачи</div><div class="sub">'+(hb>=0?esc(branches()[hb]):'все филиалы')+' · появляются сами</div></div>'+
+    '<button class="ib" onclick="openSettings()" aria-label="Настройки">'+IC.gear+'</button></div>'+
+    '<div class="tabs">'+['Все филиалы'].concat(branches()).map(function(n,i){ return '<div class="tab'+(i-1===hb?' on':'')+'" onclick="hb='+(i-1)+';render()">'+esc(n)+'</div>'; }).join('')+'</div></div>'+
+    '<div class="content">';
+  if (!list.length) h+='<div class="empty"><h3>Задач нет</h3>Никого не нужно обзванивать, посещаемость не падает, футболки в этом году сделаны.</div>';
+  else h+=list.map(function(x){
+    return '<button class="row2 task'+(x.bad?' bad':'')+'" onclick="openTask(\''+x.type+'\')">'+x.ic+'<div class="grow"><b>'+esc(x.title)+'</b><span>'+esc(x.sub)+'</span></div>'+IC.chev+'</button>';
+  }).join('');
+  h+='<div class="hint" style="margin-top:14px">Задачи ставятся автоматически по данным таблицы: <b>обзвонить</b> — кто пропустил '+AWAY+' занятия подряд; <b>реклама</b> — если посещаемость за 4 недели упала на '+Math.round(ADS_DROP*100)+'% и больше; <b>футболки</b> — каждой группе раз в год.</div>';
+  $('app').innerHTML=h+'</div>'+navHtml('home');
+}
+function telHref(p){ var d=String(p||'').replace(/\D/g,''); if(d.length===11&&d[0]==='8') d='7'+d.slice(1); if(d.length===10) d='7'+d; return d.length>=11?'tel:+'+d:''; }
+var taskBusy=false;
+function taskMark(type, key, undo){
+  if (taskBusy) return;
+  if (!isOnline()){ toast('Нет связи — отметьте задачу, когда появится интернет'); return; }
+  var T=tstate(), d=today();                                   // сразу на экране
+  if (type==='ads') T.ads=undo?'':d; else if (undo) delete T[type][key]; else T[type][key]=d;
+  render(); openTask(type, true);
+  taskBusy=true; begin();
+  api('taskDone',[type,key||'',!!undo],20000).then(function(r){ if (r) S.tasks=r; cacheSave(S); })
+    .catch(function(e){ toast('Не сохранилось: '+e.message); load(true); })
+    .then(function(){ taskBusy=false; end(); render(); if (sheetKey==='task:'+type) openTask(type, true); });
+}
+function openTask(type, keep){
+  var x=homeTasks(hb).filter(function(z){ return z.type===type; })[0], h='';
+  if (type==='call'){
+    h='<h2>Обзвонить</h2><div class="sub">Дети, которые не были '+AWAY+' и больше занятий подряд. После звонка нажмите «Готово» — ребёнок пропадёт из списка на '+CALL_SNOOZE+' дней.</div>';
+    h+= x ? x.items.map(function(it){
+      var k=it.k, tels=[k.phone1,k.phone2].filter(function(p){ return telHref(p); });
+      return '<div class="tcard"><div class="main"><div class="nm">'+esc(k.name)+'</div><div class="hint" style="margin:2px 0 0">'+esc(k.group)+' · '+esc(it.branch)+' · '+(k.lastVisit?'был '+lbl(k.lastVisit):'ещё не был')+' · '+k.missed+' '+plural(k.missed,'пропуск','пропуска','пропусков')+'</div>'+
+        '<div class="tact">'+(tels.length?tels.map(function(p){ return '<a class="mini-btn ghost" href="'+telHref(p)+'">'+IC.phone+esc(p)+'</a>'; }).join(''):'<span class="hint">телефона нет</span>')+
+        '<button class="mini-btn" onclick="taskMark(\'call\',\''+k.id+'\')">Готово</button></div></div></div>';
+    }).join('') : '<div class="hint" style="margin-top:12px">Список пуст — всех обзвонили.</div>';
+  } else if (type==='ads'){
+    var tr=x?x.trend:attTrend(hb);
+    h='<h2>Заказать рекламу</h2><div class="sub">Задача появляется сама, когда средняя посещаемость за последние 4 недели падает на '+Math.round(ADS_DROP*100)+'% и больше.</div>'+
+      '<div class="tstats"><div><b>'+tr.now.toFixed(1).replace('.',',')+'</b><span>детей на занятии<br>последние 4 недели</span></div><div><b>'+tr.was.toFixed(1).replace('.',',')+'</b><span>детей на занятии<br>4 недели до этого</span></div></div>'+
+      '<div class="hint">Новых записей на пробное за 30 дней: <b>'+recentLeads()+'</b>. Ссылка на форму записи для рекламы — в Настройках.</div>'+
+      (x?'<button class="btn p" onclick="taskMark(\'ads\')">Заказал(а) рекламу</button><div class="hint" style="text-align:center">Задача скроется на '+ADS_SNOOZE+' дней.</div>':'<div class="hint">Сейчас задачи нет.</div>');
+  } else if (type==='shirt'){
+    var T=tstate(), all=[];
+    branches().forEach(function(n,i){
+      if (hb>=0 && hb!==i) return;
+      var b=S.branches[n]; if(!b||b.error) return; var gs={};
+      b.kids.forEach(function(k){ if(!k.pendingNew) gs[k.group]=(gs[k.group]||0)+1; });
+      Object.keys(gs).forEach(function(g){ all.push({key:n+'|'+g, branch:n, group:g, n:gs[g], last:T.shirt[n+'|'+g]||''}); });
+    });
+    h='<h2>Футболки группам</h2><div class="sub">Раз в год у каждой группы. Когда сделали — нажмите «Сделали», задача вернётся через год.</div>';
+    h+=all.map(function(g){
+      var due=!g.last || g.last<=addDays(today(),-SHIRT_DAYS);
+      return '<div class="tcard"><div class="main"><div class="nm">'+esc(g.group)+'</div><div class="hint" style="margin:2px 0 0">'+esc(g.branch)+' · '+g.n+' '+plural(g.n,'ребёнок','ребёнка','детей')+' · '+(g.last?'последний раз '+lbl(g.last)+'.'+g.last.slice(0,4):'ещё не отмечали')+'</div></div>'+
+        (due?'<button class="mini-btn" onclick="taskMark(\'shirt\',this.getAttribute(\'data-k\'))" data-k="'+esc(g.key)+'">Сделали</button>'
+            :'<button class="mini-btn ghost" onclick="taskMark(\'shirt\',this.getAttribute(\'data-k\'),true)" data-k="'+esc(g.key)+'">Отменить</button>')+'</div>';
+    }).join('');
+  }
+  sheet(h+'<button class="btn q" onclick="closeSheet()">Закрыть</button>', 'task:'+type);
+}
+function recentLeads(){ var lim=addDays(today(),-30), n=0; (S.leads||[]).forEach(function(l){ var c=String(l.created||''), iso=c.length===10?c.slice(6)+'-'+c.slice(3,5)+'-'+c.slice(0,2):''; if (iso>lim) n++; }); return n; }
+
 function whenLbl(iso){
   var t=today(), d=new Date(iso+'T12:00:00'), n=new Date(); n.setDate(n.getDate()+1);
   var tm=n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate());
@@ -717,14 +862,14 @@ function whenLbl(iso){
   return DOW[d.getDay()].toLowerCase()+', '+d.getDate()+' '+GEN[d.getMonth()];
 }
 function upcoming(sel){
-  var t=today(), out=[];
+  var t=today(), out=[], p=t.split('-'), w=(new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay()+6)%7, end=addDays(t,6-w);
   branches().forEach(function(n,i){
     if (sel>=0 && sel!==i) return;
     var b=S.branches[n]; if(!b||b.error) return;
-    (b.dates||[]).forEach(function(d){ if (d.iso>=t) out.push({bi:i,name:n,iso:d.iso,kids:b.kids.length}); });
+    (b.dates||[]).forEach(function(d){ if (d.iso>=t && d.iso<=end) out.push({bi:i,name:n,iso:d.iso,kids:b.kids.length}); });
   });
   out.sort(function(x,y){ return x.iso<y.iso?-1:(x.iso>y.iso?1:x.bi-y.bi); });
-  return out.slice(0,5);
+  return out;
 }
 function goTrain(i, iso){ bi=i; try{localStorage.setItem('bk72_branch',i);}catch(e){} sel[bname()]=iso; q=''; screen='main'; render(); }
 function alertsHtml(names){
@@ -736,29 +881,28 @@ function tile(ic, val, label, click, cls){
   return '<button class="tile'+(cls?' '+cls:'')+'" onclick="'+click+'">'+ic+'<b>'+val+'</b><span>'+label+'</span></button>';
 }
 function renderHome(){
-  var st=homeStats(hb), mp=monthPay(), nl=activeLeads().length;
+  var st=homeStats(hb), mp=monthPay(), nl=activeLeads().length, tk=homeTasks(hb);
   var names = hb>=0 ? [branches()[hb]] : branches();
   var h='<div class="content home"><div class="hero"><div class="hrow"><img class="wmimg light" src="assets/crew-wordmark-light.svg" alt="CREW">'+
     '<button class="ib dk" onclick="openSettings()" aria-label="Настройки">'+IC.gear+'</button></div>'+
     '<div class="hi">'+esc(greet())+'</div><div class="hd">'+esc(humanDate(today()))+' · '+esc(S.monthLabel)+(isOnline()?'':' · офлайн')+'</div>'+
     '<div class="hsel">'+['Все филиалы'].concat(branches()).map(function(n,i){ return '<button class="'+(i-1===hb?'on':'')+'" onclick="setHB('+(i-1)+')">'+esc(n)+'</button>'; }).join('')+'</div></div>'+
     '<div class="tiles">'+
-      tile(IC.users, st.kids, plural(st.kids,'ученик','ученика','учеников'), "homeGo('kids')")+
-      tile(IC.cal, st.groups, plural(st.groups,'группа','группы','групп'), "homeGo('main')")+
+      tile(IC.users, st.goes, 'ходят · из '+st.kids, "kf='act';homeGo('kids')")+
+      tile(IC.task, tk.length, tk.length?plural(tk.length,'задача','задачи','задач'):'задач нет', "go('tasks')", tk.length?'accent':'')+
       tile(IC.wallet, mp?rub(mp.total):'…', 'оплаты в этом месяце', "paySeg='log';homeGo('pay')")+
       tile(IC.warn, st.debtN, st.debtN?('должников · '+rub(-st.debt)):'долгов нет', "paySeg='debt';homeGo('pay')", st.debtN?'bad':'')+
     '</div>'+alertsHtml(names);
   if (nl) h+='<button class="row2" onclick="openLeads()"><div class="grow"><b>Записались на пробное</b><span>ждут зачисления в группу</span></div><i class="cnt2">'+nl+'</i>'+IC.chev+'</button>';
   var up=upcoming(hb);
-  h+='<div class="home-layout"><section class="home-schedule"><div class="home-section-head"><div><div class="eyebrow">ПЛАН РАБОТЫ</div><h2>Ближайшие занятия</h2></div><button class="text-action" onclick="go(&quot;sched&quot;)">Все расписание '+IC.chev+'</button></div>';
+  h+='<div class="home-layout"><section class="home-schedule"><div class="home-section-head"><div><div class="eyebrow">ДО ВОСКРЕСЕНЬЯ</div><h2>На этой неделе</h2></div><button class="text-action" onclick="go(&quot;sched&quot;)">Все расписание '+IC.chev+'</button></div>';
   h+='<div class="up-list">'+(up.length ? up.map(function(u){
       return '<div class="up'+(u.iso===today()?' today':'')+'" onclick="goTrain('+u.bi+',\''+u.iso+'\')"><div class="up-date"><span>'+esc(whenLbl(u.iso))+'</span><i></i></div><div class="grow"><div class="uw">'+esc(u.name)+'</div><div class="us">'+u.kids+' '+plural(u.kids,'ребёнок','ребёнка','детей')+'</div></div><span class="chev">'+IC.chev+'</span></div>';
-    }).join('') : '<div class="hint" style="padding:12px 2px">В этом месяце занятий больше нет.</div>')+'</div></section>';
+    }).join('') : '<div class="hint" style="padding:12px 2px">На этой неделе занятий больше нет. Весь месяц — в «Все расписание».</div>')+'</div></section>';
   h+='<aside class="home-aside"><section class="aside-card"><div class="aside-title"><div><div class="eyebrow">СТРУКТУРА CREW</div><h2>Площадки</h2></div><span class="aside-count">'+branches().length+'</span></div>';
   h+=branches().map(function(n,i){
-    var b=S.branches[n], kids=(b&&Array.isArray(b.kids))?b.kids:[], gs={};
-    kids.forEach(function(k){ gs[k.group]=1; });
-    return '<button class="branch-row'+(hb===i?' active':'')+'" onclick="setHB('+i+')"><span class="branch-dot"></span><span class="branch-copy"><b>'+esc(n)+'</b><small>'+Object.keys(gs).length+' '+plural(Object.keys(gs).length,'группа','группы','групп')+'</small></span><strong>'+kids.length+'</strong>'+IC.chev+'</button>';
+    var b=S.branches[n], kids=(b&&Array.isArray(b.kids))?b.kids:[], gn=kids.filter(goes).length;
+    return '<button class="branch-row'+(hb===i?' active':'')+'" onclick="setHB('+i+')"><span class="branch-dot"></span><span class="branch-copy"><b>'+esc(n)+'</b><small>ходят '+gn+' из '+kids.length+'</small></span><strong>'+gn+'</strong>'+IC.chev+'</button>';
   }).join('');
   h+='</section><section class="aside-card quick-card"><div class="eyebrow">БЫСТРЫЙ ДОСТУП</div><h2>Что делаем?</h2><button class="quick-action" onclick="homeGo(&quot;main&quot;)">'+IC.cal+'<span>Отметить посещаемость</span>'+IC.chev+'</button><button class="quick-action" onclick="homeGo(&quot;kids&quot;)">'+IC.users+'<span>Открыть учеников</span>'+IC.chev+'</button><button class="quick-action" onclick="paySeg=&quot;debt&quot;;homeGo(&quot;pay&quot;)">'+IC.wallet+'<span>Проверить задолженности</span>'+IC.chev+'</button></section></aside></div>';
   $('app').innerHTML=h+'</div>'+navHtml('home');
@@ -768,13 +912,13 @@ function renderHome(){
 function setKF(f){ kf=f; render(); }
 function renderKids(){
   var b=B(); if (!b || b.error){ $('app').innerHTML=topbar('Ученики',esc(bname()),true)+'<div class="content"><div class="err">'+esc(b&&b.error||'Нет данных')+'</div></div>'+navHtml('kids'); return; }
-  var all=b.kids, act=all.filter(function(k){ return !away(k); }), debts=all.filter(function(k){ return k.remainder<0; });
+  var all=b.kids, act=all.filter(goes), debts=all.filter(function(k){ return k.remainder<0; });
   var gl=gchips(all);
   var inG=function(a){ return gf?a.filter(function(k){ return k.group===gf; }):a; };
   var list= inG(kf==='debt'?debts : (kf==='act'?act : all));
   var h=topbar('Ученики', esc(bname())+' · '+all.length, true)+'<div class="content">'+
     '<input class="search" id="q" type="search" placeholder="Поиск по имени" value="'+esc(q)+'" oninput="q=this.value;filter()">'+
-    '<div class="seg">'+[['all','Все',all.length],['act','Активные',act.length],['debt','Долги',debts.length]].map(function(x){
+    '<div class="seg">'+[['all','Все',all.length],['act','Ходят',act.length],['debt','Долги',debts.length]].map(function(x){
       return '<button class="'+(kf===x[0]?'on':'')+(x[0]==='debt'&&x[2]?' red':'')+'" onclick="setKF(\''+x[0]+'\')">'+x[1]+' <b>'+x[2]+'</b></button>'; }).join('')+'</div>'+gl;
   if (!list.length) h+='<div class="empty"><h3>'+(kf==='debt'?'Долгов нет':'Никого нет')+'</h3>'+(kf==='debt'?'У всех баланс в плюсе или в нуле.':'Добавьте ребёнка кнопкой «+».')+'</div>';
   var g=groups({kids:list});
@@ -878,9 +1022,10 @@ function renderMore(){
     moreRow(IC.users,'Записались','новички до зачисления в группу',"openLeads()", n||'')+
     moreRow(IC.wallet,'История оплат','все оплаты месяца и график',"paySeg='log';go('pay')")+
     moreRow(IC.cal,'Расписание месяца','все дни тренировок по неделям',"go('sched')")+
-    moreRow(IC.gear,'Настройки','дни недели, новый месяц, форма записи, ключ',"openSettings()")+
+    moreRow(IC.task,'Задачи','обзвон, реклама, футболки',"go('tasks')", homeTasks(-1).length||'')+
+    moreRow(IC.link,'Тренерский доступ','ссылка для тренера на замену',"openCoachAccess()")+
     moreRow(IC.refresh,'Обновить данные', qn?('ждут отправки: '+qn):(isOnline()?'связь есть':'нет связи'),"toast('Обновляю…');load(true)")+
-    moreRow(IC.gear,'Проверка таблицы','что скрипт видит в листах',"openDiag()")+
+    moreRow(IC.check,'Проверка таблицы','что скрипт видит в листах',"openDiag()")+
     (fl?moreRow(IC.warn,'Не ушло в таблицу','записи, которые таблица не приняла',"openSettings()",fl):'')+
     '<div class="hint" style="text-align:center;margin-top:18px">Таблица: '+esc(S.ssName||'')+' · '+esc(S.monthLabel)+'</div></div>'+navHtml('more');
   $('app').innerHTML=h;
@@ -1064,7 +1209,8 @@ function openStart(pref){
 function suggestIso(idx){
   var b = S.branches[branches()[idx]];
   if (!b || !b.dates || !b.dates.length) return null;
-  var t = today(), past = b.dates.filter(function(d){ return d.iso<=t; });
+  var t = today(), past = b.dates.filter(function(d){ return d.iso<=t && (!COACH || d.iso>=coachMin()); });
+  if (COACH && !past.length) return null;
   if (past.length) return past[past.length-1].iso;          // сегодня или последняя прошедшая
   return b.dates[0].iso;
 }
@@ -1090,8 +1236,8 @@ function renderStart(){
 
   var b = S.branches[branches()[pick.bi]] || {}, t = today();
   var dates = (b.dates||[]).map(function(d){
-    var later = d.iso>t;
-    var note = d.iso===t ? 'сегодня' : (later ? 'позже' : 'прошло');
+    var later = d.iso>t || (COACH && d.iso<coachMin());
+    var note = d.iso===t ? 'сегодня' : (d.iso>t ? 'позже' : 'прошло');
     return '<div class="dbtn'+(d.iso===pick.iso?' on':'')+(later?' dis':'')+'"'+(later?'':' onclick="pickDay(\''+d.iso+'\')"')+'><div class="dw">'+d.dow+'</div><div class="dd">'+d.label.slice(0,2)+'</div><div class="nt">'+note+'</div></div>';
   }).join('') || '<div class="hint">В таблице нет столбцов с датами на '+esc(S.monthLabel)+'.<br>Откройте таблицу → меню «БРЕЙКИДС72» → «Обновить календарь по расписанию».'+
     '<button class="btn s" style="margin-top:10px" onclick="openDiag()">Проверить таблицу</button></div>';
@@ -1099,13 +1245,14 @@ function renderStart(){
 
   var all = b.dates||[], past = all.filter(function(d){ return d.iso<=t; });
   var notYet = all.length>0 && past.length===0;             // все тренировки месяца ещё впереди
+  var coachNo = COACH && !notYet && !pick.iso;              // у тренера сегодня/вчера занятий нет
   var ready = !!pick.iso && !b.error && !notYet, isToday = pick.iso===t;
   var kk=b.kids||[], grs={}, debts=0, came=0;
   kk.forEach(function(k){ grs[k.group]=1; if(k.remainder<0) debts++; if(pick.iso && k.attendance[pick.iso]) came++; });
   var mini = kk.length ? ('<div class="mini a4">'+
       '<div><b>'+kk.length+'</b><span>'+plural(kk.length,'ребёнок','ребёнка','детей')+'</span></div>'+
       '<div><b>'+Object.keys(grs).length+'</b><span>'+plural(Object.keys(grs).length,'группа','группы','групп')+'</span></div>'+
-      '<div><b'+(debts?' class="bad"':'')+'>'+debts+'</b><span>'+plural(debts,'долг','долга','долгов')+'</span></div>'+
+      (COACH?'':'<div><b'+(debts?' class="bad"':'')+'>'+debts+'</b><span>'+plural(debts,'долг','долга','долгов')+'</span></div>')+
       (came?('<div><b class="good">'+came+'</b><span>уже отмечены</span></div>'):'')+
     '</div>') : '';
   var anim = startFresh ? ' anim' : '';
@@ -1121,7 +1268,7 @@ function renderStart(){
       mini+
       '<div class="startfoot">'+
         (ready ? '<div class="confirm">Отмечаем <b>'+esc(humanDate(pick.iso))+'</b>'+(isToday?' <span class="tag">сегодня</span>':'')+'<br>'+esc(branches()[pick.bi])+'</div>'
-               : '<div class="confirm">'+(b.error?esc(b.error):(notYet?('Тренировки '+esc(S.monthLabel)+' ещё впереди. Ближайшая — <b>'+esc(humanDate(all[0].iso))+'</b>. Отметки ставятся в день занятия.'):'Выберите дату тренировки'))+'</div>')+
+               : '<div class="confirm">'+(b.error?esc(b.error):coachNo?('Сегодня и вчера в этом филиале занятий нет. Ближайшее — <b>'+esc(humanDate((all.filter(function(d){ return d.iso>t; })[0]||{}).iso||''))+'</b>.'):(notYet?('Тренировки '+esc(S.monthLabel)+' ещё впереди. Ближайшая — <b>'+esc(humanDate(all[0].iso))+'</b>. Отметки ставятся в день занятия.'):'Выберите дату тренировки'))+'</div>')+
         (notYet ? '<button class="btn p" onclick="skipStart()">Открыть список детей</button>'
                 : '<button class="btn p" onclick="startGo()"'+(ready?'':' disabled')+'>Начать отметку</button>')+
         '<div class="startlinks">'+(notYet?'':'<button onclick="skipStart()">Пропустить</button>')+'<button onclick="openSettings()">Настройки</button></div>'+
@@ -1168,10 +1315,12 @@ function toggle(id, iso){
   var key=markKey(id,iso), now=Date.now();
   if (k.attendance[iso]){                                   // снятие отметки
     if (lastAdd[key] && now-lastAdd[key]<GUARD_MS) return;
+    if (COACH && iso<coachMin()){ toast('В режиме тренера можно менять только сегодня и вчера'); return; }
     if (!isArmed(id,iso)){ setArmed(key); render(); toast('Ещё раз — чтобы снять'); return; }
     setArmed(null);
   } else {
     if (iso>today()){ toast('Тренировка ещё не прошла — отметим в этот день'); return; }
+    if (COACH && iso<coachMin()){ toast('В режиме тренера можно отмечать только сегодня и вчера'); return; }
     lastAdd[key]=now;
   }
   var val=!k.attendance[iso], branch=bname();
@@ -1183,7 +1332,7 @@ function toggle(id, iso){
     if (r && r.queued){ cacheSave(S); return; }
     var kk=kid(id);
     // пока по этому ребёнку летят другие запросы, цифры сервера устарели — их применит последний ответ
-    if (kk && r && r.visits!==undefined && busyKid[id]<=1){
+    if (kk && r && r.visits!==undefined && r.balance!==undefined && busyKid[id]<=1){
       var changed = kk.visits!==r.visits || kk.remainder!==r.remainder || kk.balance!==r.balance || kk.price!==r.price;
       kk.visits=r.visits; kk.remainder=r.remainder; kk.balance=r.balance; kk.price=r.price;
       if (changed){ render(); refreshSheet(); }
@@ -1229,7 +1378,7 @@ function swipeSheet(el){
     y0=null;
   });
 }
-function refreshSheet(){ if (sheetKey && sheetKey.indexOf('kid:')===0){ var id=sheetKey.slice(4); if (kid(id)) openKid(id); else closeSheet(); } }
+function refreshSheet(){ if (sheetKey && sheetKey.indexOf('task:')===0){ openTask(sheetKey.slice(5), true); return; } if (sheetKey && sheetKey.indexOf('kid:')===0){ var id=sheetKey.slice(4); if (kid(id)) openKid(id); else closeSheet(); } }
 
 // ======== карточка ребёнка ========
 var kidLog={};                       // id -> {t, html}: история оплат ребёнка, чтобы не дёргать таблицу на каждый тап
@@ -1431,7 +1580,25 @@ function openDiag(){
 var backTo='main';
 function openSettings(){ closeSheet(); if (screen!=='settings') backTo=(branchScreen(screen)||screen==='more'||screen==='leads')?screen:'main'; screen='settings'; render(); }
 function closeSettings(){ screen = (session || !S || !S.configured) ? (backTo||'main') : 'start'; render(); load(true); }
+function coachExit(){
+  if (!confirm('Выйти из режима тренера на этом устройстве? Чтобы вернуться, понадобится ссылка от руководителя.')) return;
+  try { ['bk72_role','bk72_apiUrl','bk72_key','bk72_data','bk72_session','bk72_queue','bk72_sending'].forEach(function(k){ localStorage.removeItem(k); }); } catch (e) {}
+  location.replace(location.pathname);
+}
+function renderCoachSettings(){
+  var qn=queueCount();
+  var h='<div class="top"><div class="row"><button class="ib" onclick="closeSettings()" aria-label="Назад">'+IC.back+'</button><div class="title">Режим тренера</div></div></div><div class="content">';
+  if (needKey) h+='<div class="err">Ссылка больше не действует: руководитель выдал новую. Попросите новую ссылку и откройте её на этом телефоне.</div>';
+  h+='<div class="panel"><h3>Что доступно</h3><p>Выбрать филиал и дату занятия и отметить, кто пришёл. Отмечать можно сегодня и вчера.</p>'+
+    '<p>Оплаты, балансы, телефоны, заявки и настройки в этом режиме закрыты.</p>'+
+    (qn?'<p><b>'+qn+' '+plural(qn,'отметка ждёт','отметки ждут','отметок ждут')+' отправки</b> — уйдут сами, когда появится интернет.</p>':'')+
+    '<button class="btn s" onclick="openStart()">Сменить филиал или дату</button>'+
+    '<button class="btn q" onclick="toast(\'Обновляю…\');load(true)">Обновить данные</button></div>'+
+    '<div class="panel"><h3>Выйти</h3><p>Отключить режим тренера на этом устройстве.</p><button class="btn q" onclick="coachExit()">Выйти из режима тренера</button></div>';
+  $('app').innerHTML=h+'</div>';
+}
 function renderSettings(){
+  if (COACH) return renderCoachSettings();
   var conf=S&&S.configured, now=new Date(), m=conf?S.month.monthIdx:now.getMonth(), y=conf?S.month.year:now.getFullYear();
   var h='<div class="top"><div class="row"><button class="ib" onclick="closeSettings()" aria-label="Назад">'+IC.back+'</button><div class="title">Настройки</div></div></div><div class="content">';
   h+='<div class="panel"><h3>1. Сервер <span class="st '+(API?'ok':'no')+'">'+(API?'указан':'не указан')+'</span></h3><p>Адрес из Apps Script (Deploy → Web app), заканчивается на /exec.</p>'+
@@ -1480,6 +1647,36 @@ function renderSettings(){
       '<button class="btn s" onclick="openDiag()">Проверить</button><button class="btn q" onclick="load(true);toast(\'Обновляю…\')">Обновить данные</button></div>';
   }
   $('app').innerHTML=h+'</div>';
+}
+/** Окно «Тренерский доступ» (вкладка «Ещё»). */
+function openCoachAccess(){
+  var h='<h2>Тренерский доступ</h2><div class="sub">Для тренера на замену: он откроет ссылку на своём телефоне и сможет только выбрать филиал и дату и отметить детей (сегодня и вчера). Оплаты, балансы, телефоны, заявки и настройки ему не видны — это проверяет сама таблица.</div>';
+  if (!S || !S.coachKey) h+='<div class="hint" style="margin-top:12px">Обновите Код.gs в таблице до версии 2.5 — тогда здесь появится ссылка.</div>';
+  else h+='<div class="field" style="margin-top:14px"><input id="coachurl" readonly value="'+esc(coachLink())+'" aria-label="Ссылка для тренера"></div>'+
+    '<div class="two"><button class="btn p" onclick="copyCoach()">Скопировать</button><button class="btn s" onclick="shareCoach()">Поделиться</button></div>'+
+    '<button class="btn q" onclick="resetCoach()">Отозвать доступ — выдать новую ссылку</button>'+
+    '<div class="hint">Не открывайте эту ссылку на своём телефоне: он переключится в режим тренера.</div>';
+  sheet(h+'<button class="btn q" onclick="closeSheet()">Закрыть</button>','coach');
+}
+function coachLink(){
+  var raw=btoa(JSON.stringify({u:API,k:S.coachKey})).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  return location.origin+location.pathname+'#coach='+raw;
+}
+function copyCoach(){
+  var u=coachLink();
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(function(){ toast('Ссылка для тренера скопирована'); }).catch(function(){ toast('Скопируйте вручную из поля'); });
+  else { var e=$('coachurl'); if(e){ e.select(); try{ document.execCommand('copy'); toast('Ссылка скопирована'); }catch(x){ toast('Скопируйте вручную из поля'); } } }
+}
+function shareCoach(){
+  var u=coachLink();
+  if (navigator.share) navigator.share({title:'CREW — тренерский доступ', text:'Ссылка для отметки детей на занятии', url:u}).catch(function(){});
+  else copyCoach();
+}
+function resetCoach(){
+  if(!confirm('Выдать новую ссылку тренера? Старая сразу перестанет работать.')) return;
+  begin();
+  api('resetCoachKey',[],30000).then(function(r){ S.coachKey=r.coachKey; cacheSave(S); openCoachAccess(); toast('Готово — отправьте тренеру новую ссылку'); })
+    .catch(function(e){ toast('Ошибка: '+e.message); }).then(function(){ end(); });
 }
 function clearFailed(){ try{ localStorage.removeItem('bk72_failed'); }catch(e){} renderSettings(); }
 function copyForm(){

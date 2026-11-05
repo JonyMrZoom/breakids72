@@ -1,18 +1,21 @@
-/* CREW design system — graphite, cool white and electric blue */
+/* CREW design system 2.6 — спокойный графит, нейтральный светлый фон,
+   фирменный красный апельсин только как маленький акцент (логотип, метки «сейчас»). */
 :root {
-  --crew-bg: #F3F5FA;
+  --crew-bg: #F4F5F7;
   --crew-surface: #FFFFFF;
-  --crew-surface-muted: #EEF1F7;
-  --crew-ink: #172033;
-  --crew-muted: #6F7890;
-  --crew-border: #E3E8F1;
-  --crew-accent: #526DFF;
-  --crew-accent-soft: #EEF1FF;
-  --crew-success: #16845B;
-  --crew-success-soft: #E8F6EF;
-  --crew-danger: #C83D4D;
-  --crew-danger-soft: #FCEDEF;
+  --crew-surface-muted: #EEEFF2;
+  --crew-ink: #1E2228;
+  --crew-muted: #6B717C;
+  --crew-border: #E5E7EB;
+  --crew-accent: #2A2E35;
+  --crew-accent-soft: #EEEFF2;
+  --crew-brand: #F04E23;
+  --crew-brand-soft: #FDEDE7;
+  --crew-success: #2E7D57;
+  --crew-success-soft: #E8F2EC;
+  --crew-danger: #B93A32;
+  --crew-danger-soft: #FAECEA;
   --crew-radius-card: 18px;
   --crew-radius-control: 12px;
-  --crew-shadow-card: 0 4px 16px rgba(27, 39, 67, .055);
+  --crew-shadow-card: 0 1px 2px rgba(30, 34, 40, .04), 0 4px 14px rgba(30, 34, 40, .04);
 }
