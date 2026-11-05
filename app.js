@@ -224,7 +224,12 @@ function normalize(d){
   Object.keys(d.branches).forEach(function(n){
     var b=d.branches[n]; if (!b || b.error) return;
     b.kids = Array.isArray(b.kids) ? b.kids : [];
-    var seen={}, ds=[]; (Array.isArray(b.dates)?b.dates:[]).forEach(function(x){ if (x && x.iso && !seen[x.iso]){ seen[x.iso]=1; ds.push(x); } });
+    var seen={}, ds=[]; (Array.isArray(b.dates)?b.dates:[]).forEach(function(x){
+      if (!x || !/^\d{4}-\d{2}-\d{2}$/.test(String(x.iso||'')) || seen[x.iso]) return;
+      seen[x.iso]=1;
+      x.dow=isoDow(x.iso); x.label=lbl(x.iso);          // подпись всегда из самой даты — не разойдётся с числом
+      ds.push(x);
+    });
     ds.sort(function(x,y){ return x.iso<y.iso?-1:(x.iso>y.iso?1:0); }); b.dates=ds;
     b.kids.forEach(function(k){
       k.attendance = k.attendance || {};
@@ -305,6 +310,8 @@ document.addEventListener('focus', function(e){ if(isTel(e.target) && !e.target.
 document.addEventListener('blur', function(e){ if(isTel(e.target) && e.target.value.replace(/\D/g,'').length<2) e.target.value=''; }, true);
 function today(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function lbl(iso){ return iso.slice(8,10)+'.'+iso.slice(5,7); }
+/** День недели даты 'yyyy-mm-dd' без часовых поясов. */
+function isoDow(iso){ var p=String(iso).split('-'); return DOW[new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay()]; }
 function rub(n){ return (Number(n)||0).toLocaleString('ru-RU')+' ₽'; }
 /** Понятная расшифровка остатка занятиями. */
 function moneyNote(k){
@@ -452,7 +459,7 @@ function renderInner(){
     h+='<div class="content">';
     if (b.error) h+='<div class="err">'+esc(b.error)+'</div>';
     else h+=(updateReady?'<div class="banner"><span>Вышла новая версия приложения.</span><button onclick="location.reload()">Обновить</button></div>':'')+
-      (monthBehind()?('<div class="banner"><span>Начался новый месяц, а таблица ещё за <b>'+esc(S.monthLabel)+'</b>.</span><button onclick="newMonth()">Открыть новый месяц</button></div>'):'')+
+      (S.transition?'<div class="banner"><span>Смена месяца не завершилась (сбой связи с Google). Отметки сохранены в архиве.</span><button onclick="newMonth(true)">Завершить</button></div>':(monthBehind()?('<div class="banner"><span>Начался новый месяц, а таблица ещё за <b>'+esc(S.monthLabel)+'</b>.</span><button onclick="newMonth()">Открыть новый месяц</button></div>'):''))+
       calWarn(bname())+
       strip(b)+summary(b)+'<input class="search" id="q" type="search" placeholder="Найти ребёнка" value="'+esc(q)+'" oninput="q=this.value;filter()">'+list(b);
     h+='</div>';
@@ -487,7 +494,7 @@ function calendarProblem(d, name){
     var b=d.branches[name], days=d.days && d.days[name];
     if (!b || b.error || !days || !days.length || !d.month) return null;
     var y=d.month.year, m=d.month.monthIdx, n=new Date(y,m+1,0).getDate(), want={}, have={}, missing=[], extra=[];
-    for (var i=1;i<=n;i++){ if (days.indexOf(DOW[new Date(y,m,i).getDay()])>=0) want[y+'-'+pad(m+1)+'-'+pad(i)]=1; }
+    for (var i=1;i<=n;i++){ var wi=y+'-'+pad(m+1)+'-'+pad(i); if (days.indexOf(isoDow(wi))>=0) want[wi]=1; }
     (b.dates||[]).forEach(function(x){ have[x.iso]=1; });
     Object.keys(want).sort().forEach(function(iso){ if (!have[iso]) missing.push(iso); });
     Object.keys(have).sort().forEach(function(iso){
@@ -722,7 +729,7 @@ function upcoming(sel){
 function goTrain(i, iso){ bi=i; try{localStorage.setItem('bk72_branch',i);}catch(e){} sel[bname()]=iso; q=''; screen='main'; render(); }
 function alertsHtml(names){
   return (updateReady?'<div class="banner"><span>Вышла новая версия приложения.</span><button onclick="location.reload()">Обновить</button></div>':'')+
-    (monthBehind()?('<div class="banner"><span>Начался новый месяц, а таблица ещё за <b>'+esc(S.monthLabel)+'</b>.</span><button onclick="newMonth()">Открыть новый месяц</button></div>'):'')+
+    (S.transition?'<div class="banner"><span>Смена месяца не завершилась (сбой связи с Google). Отметки сохранены в архиве.</span><button onclick="newMonth(true)">Завершить</button></div>':(monthBehind()?('<div class="banner"><span>Начался новый месяц, а таблица ещё за <b>'+esc(S.monthLabel)+'</b>.</span><button onclick="newMonth()">Открыть новый месяц</button></div>'):''))+
     names.map(calWarn).join('');
 }
 function tile(ic, val, label, click, cls){
@@ -1402,12 +1409,16 @@ function openDiag(){
     '<div id="dg" style="margin-top:12px" class="hint">Читаю таблицу…</div>'+
     '<button class="btn q" onclick="closeSheet()">Закрыть</button>', 'diag');
   api('diagnose').then(function(d){
-    var h='<div class="hint">Месяц: <b>'+esc(d.month)+'</b><br>Вкладки: '+esc(d.sheets.join(', '))+'</div>';
+    var h='<div class="hint">Месяц: <b>'+esc(d.month)+'</b>'+(d.version?' · скрипт '+esc(d.version):' · <b style="color:var(--bad)">в таблице старый скрипт — обновите Код.gs</b>')+
+      (d.tzSheet?'<br>Пояс таблицы: '+esc(d.tzSheet)+' · сегодня по таблице '+esc(lbl(d.today||''))+(d.today && d.today!==today()?' <b style="color:var(--bad)">— не совпадает с телефоном ('+esc(lbl(today()))+'). Проверьте часовой пояс: Файл → Настройки таблицы.</b>':''):'')+
+      (d.transition?'<br><b style="color:var(--bad)">Смена месяца не завершена — нажмите «Открыть новый месяц сейчас».</b>':'')+
+      '<br>Вкладки: '+esc(d.sheets.join(', '))+'</div>';
     d.branches.forEach(function(b){
       h+='<div class="panel" style="margin-top:10px"><h3>'+esc(b.name)+'</h3>';
       if (b.error) h+='<p style="color:var(--bad)">'+esc(b.error)+'</p>';
       else h+='<p>Дни по расписанию: <b>'+esc(b.days||'—')+'</b><br>Строк с детьми: '+b.rows+
-        '<br>Дат в календаре: <b>'+b.dates.length+'</b>'+(b.dates.length?' — '+esc(b.dates.join(', ')):'')+'</p>'+
+        '<br>Дат в календаре: <b>'+b.dates.length+'</b>'+(b.dates.length?' — '+esc(b.dates.join(', ')):'')+
+        '<br>'+(b.issue?'<b style="color:var(--bad)">Не совпадает с расписанием: '+esc(b.issue)+'</b>':(b.issue===''?'<b style="color:var(--good)">Календарь совпадает с расписанием</b>':''))+'</p>'+
         '<p><b>Заголовки строки 2:</b><br>'+esc(b.headers.join(' · '))+'</p>'+
         '<p><b>Куда пишет скрипт:</b><br>'+esc(b.fields.join(' · '))+'</p>';
       h+='</div>';
@@ -1522,10 +1533,11 @@ function getFresh(tries){
     throw e;
   });
 }
-function newMonth(){
+function newMonth(resume){
   if (monthBusy) return;
   if (!S || !S.configured) return;
-  if(!confirm('Создать таблицу на следующий месяц и переключить приложение на неё?')) return;
+  if (S.transition) resume=true;
+  if(!confirm(resume?'Завершить начатую смену месяца? Уже обработанные филиалы повторно не трогаются.':'Создать таблицу на следующий месяц и переключить приложение на неё?')) return;
   var was=S.monthLabel, createErr=null;
   monthBusy=true; begin();
   var btn=$('snm');                                           // кнопки может не быть: запуск и из баннера на главном экране
@@ -1538,11 +1550,11 @@ function newMonth(){
     document.querySelectorAll('.banner button').forEach(function(y){ y.disabled=false; });
   };
   api('createNextMonthCopy', [], 180000, true)                 // операция долгая — ждём дольше обычного
-    .then(function(r){ toast('Готово: '+((r && r.newName)||'новый месяц')); })
+    .then(function(r){ toast('Готово: '+((r && r.newName)||'новый месяц')); if (r && r.problems && r.problems.length) setTimeout(function(){ toast('Проверьте даты: '+r.problems.join('; ')); }, 3000); })
     .catch(function(e){ createErr=e; })                        // связь могла оборваться, пока скрипт работал — проверим сами
     .then(function(){ return getFresh(4).catch(function(e){ throw createErr||e; }); })
     .then(function(d){
-      if (d.monthLabel===was && createErr) throw createErr;    // месяц так и не сменился
+      if ((d.monthLabel===was || d.transition) && createErr) throw createErr;    // месяц так и не сменился
       lastSig=''; adopt(d); sel={}; session=null; q='';
       var bad=branches().filter(function(n){ return calendarProblem(d,n); });
       release();
